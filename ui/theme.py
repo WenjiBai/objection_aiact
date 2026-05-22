@@ -171,7 +171,13 @@ def apply_theme(theme: dict | None = None) -> None:
         }}
 
         [data-testid="stHeader"] {{
-            background: transparent;
+            display: none;
+        }}
+
+        [data-testid="stToolbar"],
+        [data-testid="stDecoration"],
+        [data-testid="stStatusWidget"] {{
+            display: none !important;
         }}
 
         [data-testid="stSidebar"] {{
@@ -818,6 +824,38 @@ def apply_theme(theme: dict | None = None) -> None:
             border-top: 0.5px solid var(--aa-border);
             margin: 24px -24px -24px;
             padding: 12px 24px 18px;
+        }}
+
+        [data-testid="stChatInput"] {{
+            background: var(--aa-surface-muted) !important;
+            border-top: 0.5px solid var(--aa-border) !important;
+        }}
+
+        [data-testid="stChatInput"] div {{
+            background: var(--aa-surface-muted) !important;
+        }}
+
+        [data-testid="stChatInput"] textarea {{
+            background: var(--aa-surface) !important;
+            border: 0.5px solid var(--aa-border) !important;
+            border-radius: 8px !important;
+            color: var(--aa-text) !important;
+            font-family: var(--aa-font) !important;
+        }}
+
+        [data-testid="stChatInput"] textarea::placeholder {{
+            color: #8a8790 !important;
+        }}
+
+        [data-testid="stChatInput"] button {{
+            background: var(--aa-primary) !important;
+            border-radius: 6px !important;
+            color: white !important;
+        }}
+
+        [data-testid="stChatInput"] button * {{
+            background: var(--aa-primary) !important;
+            color: white !important;
         }}
 
         @media (max-width: 760px) {{
