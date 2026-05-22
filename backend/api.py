@@ -11,17 +11,9 @@ from __future__ import annotations
 
 from pydantic import ValidationError
 
+from backend.exceptions import BackendValidationError  # re-exported for B
 from shared.mock import make_mock_case_a, make_mock_case_b, simulate_chat_response
 from shared.schema import CaseFile, CaseStatus
-
-
-class BackendValidationError(Exception):
-    """Raised when an agent's output cannot be coerced into CaseFile after retries."""
-
-    def __init__(self, agent: str, errors):
-        self.agent = agent
-        self.errors = errors
-        super().__init__(f"[{agent}] backend validation failed: {errors}")
 
 
 # --------------------------------------------------------------- entries
@@ -65,3 +57,6 @@ def handle_chat(case: CaseFile, user_text: str) -> CaseFile:
         return CaseFile.model_validate(updated.model_dump())
     except ValidationError as e:
         raise BackendValidationError(agent="handle_chat", errors=e.errors())
+
+
+__all__ = ["run_courtroom", "handle_chat", "BackendValidationError"]

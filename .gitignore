@@ -12,6 +12,9 @@ __pycache__/
 # Runtime persistence mirror (CaseFile JSONs are not source-of-truth)
 case_storage/
 
+# RAG vector index (rebuilt from rag/corpus.py — not source-of-truth)
+rag/chroma_store/
+
 # IDE
 .idea/
 .vscode/
