@@ -31,8 +31,8 @@ from shared.agent_outputs import (
 )
 from shared.schema import (
     Allegation, Assumption, CaseFile, ChatTurn, ChecklistItem, Defense,
-    Document, Evidence, MissingEvidenceItem, Objection, Reference,
-    RuleFiring, Verdict,
+    Document, Evidence, MissingEvidenceItem, Objection, OutputType,
+    Reference, RuleFiring, Sector, Verdict,
 )
 
 
@@ -56,9 +56,37 @@ ATOMIC_TYPES = [
 ]
 
 
+_STRUCTURED_VALUE_ENUM_DEFS = {
+    "Sector": {
+        "title": "Sector",
+        "type": "string",
+        "enum": [s.value for s in Sector],
+    },
+    "OutputType": {
+        "title": "OutputType",
+        "type": "string",
+        "enum": [o.value for o in OutputType],
+    },
+}
+
+# Classes whose schema must surface OutputType / Sector enums so A's Detective
+# prompt can constrain `structured_value` even though it stays typed as str.
+_INJECT_ENUMS_INTO = {"Evidence", "DetectiveOutput"}
+
+
+def _inject_structured_value_enums(schema: dict) -> dict:
+    """Add Sector/OutputType to $defs so they're visible in the dumped JSON."""
+    defs = schema.setdefault("$defs", {})
+    for name, body in _STRUCTURED_VALUE_ENUM_DEFS.items():
+        defs.setdefault(name, body)
+    return schema
+
+
 def _dump(cls, out_dir: Path) -> Path:
     path = out_dir / f"{cls.__name__}.json"
     schema = cls.model_json_schema()
+    if cls.__name__ in _INJECT_ENUMS_INTO:
+        schema = _inject_structured_value_enums(schema)
     path.write_text(json.dumps(schema, indent=2, ensure_ascii=False), encoding="utf-8")
     return path
 

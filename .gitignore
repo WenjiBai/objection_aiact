@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+.env
+*.egg-info/
+rag/chroma_store/

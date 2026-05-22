@@ -143,7 +143,25 @@ class Evidence(_Base):
     source_doc_id: str
     source_locator: Optional[str] = None
     text: str
-    structured_value: Optional[str] = None
+    structured_value: Optional[str] = Field(
+        default=None,
+        description=(
+            "Symbolic-gate matching value. Required for some categories:\n"
+            "  category=sector      → must be a Sector enum value\n"
+            "  category=output      → must be an OutputType enum value\n"
+            "  category=gpai_usage  → must be 'true' / 'false' / 'unknown'\n"
+            "For other categories this may carry a free-text normalised state "
+            "(e.g. 'narrow_procedural' for automation_level, 'unverified' for "
+            "human_oversight) or be left null."
+        ),
+        json_schema_extra={
+            "x-allowed-values": {
+                "sector": [s.value for s in Sector],
+                "output": [o.value for o in OutputType],
+                "gpai_usage": ["true", "false", "unknown"],
+            },
+        },
+    )
     category: EvidenceCategory
     relevance: Severity
 

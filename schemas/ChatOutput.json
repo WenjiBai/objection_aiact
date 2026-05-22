@@ -120,7 +120,43 @@
             }
           ],
           "default": null,
-          "title": "Structured Value"
+          "description": "Symbolic-gate matching value. Required for some categories:\n  category=sector      → must be a Sector enum value\n  category=output      → must be an OutputType enum value\n  category=gpai_usage  → must be 'true' / 'false' / 'unknown'\nFor other categories this may carry a free-text normalised state (e.g. 'narrow_procedural' for automation_level, 'unverified' for human_oversight) or be left null.",
+          "title": "Structured Value",
+          "x-allowed-values": {
+            "gpai_usage": [
+              "true",
+              "false",
+              "unknown"
+            ],
+            "output": [
+              "ranking",
+              "screening",
+              "recommendation",
+              "scoring",
+              "classification",
+              "generation",
+              "forecast",
+              "decision",
+              "detection",
+              "other"
+            ],
+            "sector": [
+              "employment",
+              "education",
+              "critical_infrastructure",
+              "biometrics",
+              "law_enforcement",
+              "migration_border",
+              "justice_democracy",
+              "essential_services",
+              "healthcare",
+              "finance",
+              "logistics",
+              "retail",
+              "general_business",
+              "other"
+            ]
+          }
         },
         "category": {
           "$ref": "#/$defs/EvidenceCategory"

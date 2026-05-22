@@ -274,6 +274,23 @@ SEED_CHUNKS: list[Reference] = [
     ),
 
     Reference(
+        code="R-Annex-III-2", article_no="Annex-III-2",
+        title="Annex III §2 — Critical infrastructure",
+        snippet=("AI systems intended for use as safety components in the management "
+                 "and operation of critical digital infrastructure, road traffic, or "
+                 "the supply of water, gas, heating, and electricity are high-risk."),
+        full_text=(
+            "Annex III §2 — Critical infrastructure. AI systems intended to be used "
+            "as safety components in the management and operation of critical digital "
+            "infrastructure, road traffic, or in the supply of water, gas, heating "
+            "and electricity. Failure of such systems can endanger the life and "
+            "health of persons at large scale and disrupt the ordinary conduct of "
+            "social and economic activities."
+        ),
+        source_type=SourceType.LEGISLATION, source_label="EU AI Act 2024/1689",
+    ),
+
+    Reference(
         code="R-Annex-III-3", article_no="Annex-III-3",
         title="Annex III §3 — Education and vocational training",
         snippet=("AI systems determining access to, admission to, or assignment "
@@ -325,6 +342,62 @@ SEED_CHUNKS: list[Reference] = [
             "AI used for the purpose of detecting financial fraud; (c) for risk "
             "assessment and pricing in life and health insurance; (d) to evaluate "
             "and classify emergency calls or to dispatch emergency services."
+        ),
+        source_type=SourceType.LEGISLATION, source_label="EU AI Act 2024/1689",
+    ),
+
+    Reference(
+        code="R-Annex-III-6", article_no="Annex-III-6",
+        title="Annex III §6 — Law enforcement",
+        snippet=("AI systems intended to be used by law enforcement authorities for "
+                 "risk profiling, evidence evaluation, polygraphs, or crime analytics "
+                 "are high-risk."),
+        full_text=(
+            "Annex III §6 — Law enforcement. AI systems intended to be used by, or on "
+            "behalf of, law enforcement authorities, or by Union institutions, bodies, "
+            "offices, or agencies in support of law enforcement, for: (a) assessing "
+            "the risk of a natural person becoming the victim of criminal offences; "
+            "(b) polygraphs and similar tools; (c) evaluating the reliability of "
+            "evidence; (d) profiling natural persons in the course of detection, "
+            "investigation, or prosecution of criminal offences; (e) crime analytics."
+        ),
+        source_type=SourceType.LEGISLATION, source_label="EU AI Act 2024/1689",
+    ),
+
+    Reference(
+        code="R-Annex-III-7", article_no="Annex-III-7",
+        title="Annex III §7 — Migration, asylum, and border control",
+        snippet=("AI systems used by competent authorities for migration, asylum, or "
+                 "border-control management — including risk assessments and document "
+                 "verification — are high-risk."),
+        full_text=(
+            "Annex III §7 — Migration, asylum, and border control management. AI "
+            "systems intended to be used by competent public authorities, or by Union "
+            "institutions, bodies, offices, or agencies, for: (a) polygraphs and "
+            "similar tools; (b) assessing security, irregular-migration, or health "
+            "risks posed by a natural person who intends to enter the Union; (c) "
+            "examining applications for asylum, visas, and residence permits and "
+            "associated complaints; (d) detecting, recognising, or identifying natural "
+            "persons in border-management contexts."
+        ),
+        source_type=SourceType.LEGISLATION, source_label="EU AI Act 2024/1689",
+    ),
+
+    Reference(
+        code="R-Annex-III-8", article_no="Annex-III-8",
+        title="Annex III §8 — Administration of justice and democratic processes",
+        snippet=("AI systems assisting judicial authorities in researching or "
+                 "interpreting facts and law, or used to influence elections or "
+                 "voting behaviour, are high-risk."),
+        full_text=(
+            "Annex III §8 — Administration of justice and democratic processes. AI "
+            "systems intended to be used: (a) by a judicial authority, or on its "
+            "behalf, to assist in researching and interpreting facts and the law and "
+            "in applying the law to a concrete set of facts, or in alternative "
+            "dispute resolution; (b) to influence the outcome of an election or "
+            "referendum or the voting behaviour of natural persons, with the "
+            "exception of outputs whose addressee is not directly exposed to the "
+            "system (such as back-office logistical tools)."
         ),
         source_type=SourceType.LEGISLATION, source_label="EU AI Act 2024/1689",
     ),

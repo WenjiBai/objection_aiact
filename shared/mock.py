@@ -23,10 +23,11 @@ _YAML_HIRE = """\
   description: Employment-related ranking or screening
   when:
     sector: employment
-    output_type: [ranking, screening]
-    affected: [job_applicants, workers]
+    output: [ranking, screening, recommendation, scoring]
+    affected_persons: [job_applicants, workers]
   then:
     preliminary_tier: potential_high_risk
+    high_risk_candidate: true
     basis: "AI Act Annex III, employment context"
   maps_to_refs: [R-Annex-III-4, R-Art-6]
   severity: high
@@ -48,7 +49,7 @@ _YAML_GPAI = """\
 - id: R-GPAI-001
   description: Use of general-purpose AI model
   when:
-    gpai_present: true
+    gpai_usage: true
   then:
     trigger: gpai_responsibility_chain_analysis
   maps_to_refs: [R-Art-51]
@@ -57,10 +58,9 @@ _YAML_GPAI = """\
 
 _YAML_CHAT = """\
 - id: R-CHAT-001
-  description: AI system interacting with humans
+  description: AI system interacting directly with humans
   when:
-    system_type: chatbot
-    user_interaction: direct
+    deployment_context: [chatbot, direct_user_interaction]
   then:
     transparency_obligation: true
     basis: "AI Act Article 50"
@@ -177,10 +177,21 @@ def make_mock_case_a() -> CaseFile:
         RuleFiring(
             rule_id="R-HIRE-001", description="Employment-related ranking or screening",
             fired=True,
-            when_conditions={"sector": "employment", "output_type": ["ranking", "screening"]},
-            evaluated_against={"sector": "employment", "output_type": "ranking"},
-            then_actions={"preliminary_tier": "potential_high_risk",
-                          "basis": "AI Act Annex III, employment context"},
+            when_conditions={
+                "sector": "employment",
+                "output": ["ranking", "screening", "recommendation", "scoring"],
+                "affected_persons": ["job_applicants", "workers"],
+            },
+            evaluated_against={
+                "sector": "employment",
+                "output": "ranking",
+                "affected_persons": "job_applicants",
+            },
+            then_actions={
+                "preliminary_tier": "potential_high_risk",
+                "high_risk_candidate": True,
+                "basis": "AI Act Annex III, employment context",
+            },
             supporting_evidence_codes=["E-02", "E-03", "E-04"],
             maps_to_refs=["R-Annex-III-4", "R-Art-6"],
             yaml_source=_YAML_HIRE,
@@ -198,18 +209,18 @@ def make_mock_case_a() -> CaseFile:
         RuleFiring(
             rule_id="R-GPAI-001", description="Use of general-purpose AI model",
             fired=False,
-            when_conditions={"gpai_present": True},
-            evaluated_against={"gpai_present": False},
+            when_conditions={"gpai_usage": True},
+            evaluated_against={"gpai_usage": "unknown"},
             then_actions={},
             supporting_evidence_codes=["E-06"],
             maps_to_refs=[],
             yaml_source=_YAML_GPAI,
         ),
         RuleFiring(
-            rule_id="R-CHAT-001", description="AI system interacting with humans",
+            rule_id="R-CHAT-001", description="AI system interacting directly with humans",
             fired=False,
-            when_conditions={"system_type": "chatbot", "user_interaction": "direct"},
-            evaluated_against={"system_type": "ranking_tool"},
+            when_conditions={"deployment_context": ["chatbot", "direct_user_interaction"]},
+            evaluated_against={"deployment_context": "internal_hr_tool"},
             then_actions={},
             supporting_evidence_codes=[],
             maps_to_refs=[],
@@ -424,15 +435,15 @@ def make_mock_case_b() -> CaseFile:
                    yaml_source=_YAML_OVERSIGHT),
         RuleFiring(rule_id="R-GPAI-001", description="Use of general-purpose AI model",
                    fired=False,
-                   when_conditions={"gpai_present": True},
-                   evaluated_against={"gpai_present": False},
+                   when_conditions={"gpai_usage": True},
+                   evaluated_against={"gpai_usage": "false"},
                    then_actions={},
                    supporting_evidence_codes=["E-06"], maps_to_refs=[],
                    yaml_source=_YAML_GPAI),
-        RuleFiring(rule_id="R-CHAT-001", description="AI system interacting with humans",
+        RuleFiring(rule_id="R-CHAT-001", description="AI system interacting directly with humans",
                    fired=False,
-                   when_conditions={"system_type": "chatbot"},
-                   evaluated_against={"system_type": "forecaster"},
+                   when_conditions={"deployment_context": ["chatbot", "direct_user_interaction"]},
+                   evaluated_against={"deployment_context": "internal_forecaster"},
                    then_actions={},
                    supporting_evidence_codes=[], maps_to_refs=[],
                    yaml_source=_YAML_CHAT),
