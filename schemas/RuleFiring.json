@@ -1,0 +1,62 @@
+{
+  "additionalProperties": false,
+  "description": "Symbolic Rules Panel reads this directly.",
+  "properties": {
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "fired": {
+      "title": "Fired",
+      "type": "boolean"
+    },
+    "when_conditions": {
+      "additionalProperties": true,
+      "title": "When Conditions",
+      "type": "object"
+    },
+    "evaluated_against": {
+      "additionalProperties": true,
+      "title": "Evaluated Against",
+      "type": "object"
+    },
+    "then_actions": {
+      "additionalProperties": true,
+      "title": "Then Actions",
+      "type": "object"
+    },
+    "supporting_evidence_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Supporting Evidence Codes",
+      "type": "array"
+    },
+    "maps_to_refs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Maps To Refs",
+      "type": "array"
+    },
+    "yaml_source": {
+      "title": "Yaml Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "rule_id",
+    "description",
+    "fired",
+    "when_conditions",
+    "evaluated_against",
+    "then_actions",
+    "yaml_source"
+  ],
+  "title": "RuleFiring",
+  "type": "object"
+}

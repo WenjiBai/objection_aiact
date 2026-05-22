@@ -1,0 +1,220 @@
+{
+  "$defs": {
+    "Assumption": {
+      "additionalProperties": false,
+      "description": "A-code — system-generated assumptions, must be confirmable. Code: `A-{n:02d}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "type": "string"
+        },
+        "needs_confirmation": {
+          "default": true,
+          "title": "Needs Confirmation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "text",
+        "reasoning"
+      ],
+      "title": "Assumption",
+      "type": "object"
+    },
+    "ChecklistItem": {
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "title": "Item",
+          "type": "string"
+        },
+        "applies": {
+          "title": "Applies",
+          "type": "boolean"
+        },
+        "ai_act_reference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ai Act Reference"
+        },
+        "evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Codes",
+          "type": "array"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "item",
+        "applies"
+      ],
+      "title": "ChecklistItem",
+      "type": "object"
+    },
+    "ConfidenceLabel": {
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "MissingEvidenceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "blocks_verdict": {
+          "default": false,
+          "title": "Blocks Verdict",
+          "type": "boolean"
+        },
+        "suggested_questions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Suggested Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "description",
+        "severity"
+      ],
+      "title": "MissingEvidenceItem",
+      "type": "object"
+    },
+    "RiskTier": {
+      "enum": [
+        "prohibited",
+        "high_risk",
+        "potential_high_risk",
+        "limited_risk",
+        "minimal_risk",
+        "unknown"
+      ],
+      "title": "RiskTier",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Verdict": {
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "confidence_score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Confidence Score",
+          "type": "integer"
+        },
+        "confidence_label": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "reasoning_trail": {
+          "title": "Reasoning Trail",
+          "type": "string"
+        },
+        "caveats": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Caveats",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tier",
+        "confidence_score",
+        "confidence_label",
+        "reasoning_trail"
+      ],
+      "title": "Verdict",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Judge fuses prior agents into the Preliminary Verdict bundle.\n\nFills the post-deliberation block of CaseFile (Sync v1 §3.2 step 7).",
+  "properties": {
+    "verdict": {
+      "$ref": "#/$defs/Verdict"
+    },
+    "missing_evidence": {
+      "items": {
+        "$ref": "#/$defs/MissingEvidenceItem"
+      },
+      "title": "Missing Evidence",
+      "type": "array"
+    },
+    "governance_checklist": {
+      "items": {
+        "$ref": "#/$defs/ChecklistItem"
+      },
+      "title": "Governance Checklist",
+      "type": "array"
+    },
+    "follow_up_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Follow Up Questions",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "verdict"
+  ],
+  "title": "JudgeOutput",
+  "type": "object"
+}

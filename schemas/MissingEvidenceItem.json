@@ -1,0 +1,41 @@
+{
+  "$defs": {
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "severity": {
+      "$ref": "#/$defs/Severity"
+    },
+    "blocks_verdict": {
+      "default": false,
+      "title": "Blocks Verdict",
+      "type": "boolean"
+    },
+    "suggested_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Suggested Questions",
+      "type": "array"
+    }
+  },
+  "required": [
+    "description",
+    "severity"
+  ],
+  "title": "MissingEvidenceItem",
+  "type": "object"
+}

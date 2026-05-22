@@ -1,0 +1,857 @@
+{
+  "$defs": {
+    "AgentActivity": {
+      "additionalProperties": false,
+      "description": "One row in the 6-agent timeline.",
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentName"
+        },
+        "action": {
+          "title": "Action",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/AgentStatus"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Started At"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completed At"
+        },
+        "output_summary": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Output Summary"
+        }
+      },
+      "required": [
+        "agent",
+        "action",
+        "status"
+      ],
+      "title": "AgentActivity",
+      "type": "object"
+    },
+    "AgentName": {
+      "enum": [
+        "detective",
+        "legal_clerk",
+        "prosecutor",
+        "defense",
+        "critique",
+        "judge"
+      ],
+      "title": "AgentName",
+      "type": "string"
+    },
+    "AgentStatus": {
+      "enum": [
+        "pending",
+        "running",
+        "completed",
+        "failed",
+        "skipped"
+      ],
+      "title": "AgentStatus",
+      "type": "string"
+    },
+    "Allegation": {
+      "additionalProperties": false,
+      "description": "Prosecutor's claim.",
+      "properties": {
+        "allegation_id": {
+          "title": "Allegation Id",
+          "type": "string"
+        },
+        "tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "basis_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Basis Evidence Codes",
+          "type": "array"
+        },
+        "basis_ref_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Basis Ref Codes",
+          "type": "array"
+        },
+        "strength": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "allegation_id",
+        "tier",
+        "claim",
+        "strength"
+      ],
+      "title": "Allegation",
+      "type": "object"
+    },
+    "Assumption": {
+      "additionalProperties": false,
+      "description": "A-code — system-generated assumptions, must be confirmable. Code: `A-{n:02d}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "type": "string"
+        },
+        "needs_confirmation": {
+          "default": true,
+          "title": "Needs Confirmation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "text",
+        "reasoning"
+      ],
+      "title": "Assumption",
+      "type": "object"
+    },
+    "CaseStatus": {
+      "enum": [
+        "new",
+        "ingesting",
+        "retrieving",
+        "deliberating",
+        "verdict_ready",
+        "re_examining",
+        "error"
+      ],
+      "title": "CaseStatus",
+      "type": "string"
+    },
+    "ChatTurn": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "triggered_updates": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Triggered Updates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "role",
+        "text"
+      ],
+      "title": "ChatTurn",
+      "type": "object"
+    },
+    "ChecklistItem": {
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "title": "Item",
+          "type": "string"
+        },
+        "applies": {
+          "title": "Applies",
+          "type": "boolean"
+        },
+        "ai_act_reference": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ai Act Reference"
+        },
+        "evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Evidence Codes",
+          "type": "array"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Note"
+        }
+      },
+      "required": [
+        "item",
+        "applies"
+      ],
+      "title": "ChecklistItem",
+      "type": "object"
+    },
+    "ConfidenceLabel": {
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "Defense": {
+      "additionalProperties": false,
+      "description": "Mitigation / exemption argument.",
+      "properties": {
+        "defense_id": {
+          "title": "Defense Id",
+          "type": "string"
+        },
+        "targets_allegation_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Targets Allegation Id"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "basis_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Basis Evidence Codes",
+          "type": "array"
+        },
+        "basis_ref_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Basis Ref Codes",
+          "type": "array"
+        },
+        "requires_documentation": {
+          "title": "Requires Documentation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "defense_id",
+        "type",
+        "claim",
+        "requires_documentation"
+      ],
+      "title": "Defense",
+      "type": "object"
+    },
+    "Document": {
+      "additionalProperties": false,
+      "properties": {
+        "doc_id": {
+          "title": "Doc Id",
+          "type": "string"
+        },
+        "filename": {
+          "title": "Filename",
+          "type": "string"
+        },
+        "mime_type": {
+          "title": "Mime Type",
+          "type": "string"
+        },
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "page_count": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Page Count"
+        },
+        "uploaded_at": {
+          "format": "date-time",
+          "title": "Uploaded At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "doc_id",
+        "filename",
+        "mime_type",
+        "content"
+      ],
+      "title": "Document",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "E-code — facts extracted from uploaded docs. Code format: `E-{n:02d}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "source_doc_id": {
+          "title": "Source Doc Id",
+          "type": "string"
+        },
+        "source_locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Locator"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "structured_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Value"
+        },
+        "category": {
+          "$ref": "#/$defs/EvidenceCategory"
+        },
+        "relevance": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "code",
+        "source_doc_id",
+        "text",
+        "category",
+        "relevance"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceCategory": {
+      "enum": [
+        "purpose",
+        "users",
+        "affected_persons",
+        "sector",
+        "input_data",
+        "output",
+        "automation_level",
+        "human_oversight",
+        "deployment_context",
+        "ai_generated_content",
+        "gpai_usage",
+        "decision_impact",
+        "other"
+      ],
+      "title": "EvidenceCategory",
+      "type": "string"
+    },
+    "MissingEvidenceItem": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "blocks_verdict": {
+          "default": false,
+          "title": "Blocks Verdict",
+          "type": "boolean"
+        },
+        "suggested_questions": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Suggested Questions",
+          "type": "array"
+        }
+      },
+      "required": [
+        "description",
+        "severity"
+      ],
+      "title": "MissingEvidenceItem",
+      "type": "object"
+    },
+    "Objection": {
+      "additionalProperties": false,
+      "description": "Critique agent's challenge.",
+      "properties": {
+        "objection_id": {
+          "title": "Objection Id",
+          "type": "string"
+        },
+        "target_type": {
+          "title": "Target Type",
+          "type": "string"
+        },
+        "target_id": {
+          "title": "Target Id",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "challenging_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Challenging Evidence Codes",
+          "type": "array"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        }
+      },
+      "required": [
+        "objection_id",
+        "target_type",
+        "target_id",
+        "reason",
+        "severity"
+      ],
+      "title": "Objection",
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "description": "R-code — citations from the AI Act corpus.\n\nCode formats: `R-Art-{n}` / `R-Annex-{n}-{item}` / `R-Recital-{n}`\n/ `R-Guide-{slug}` / `R-FI-{slug}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "article_no": {
+          "title": "Article No",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "snippet": {
+          "title": "Snippet",
+          "type": "string"
+        },
+        "full_text": {
+          "title": "Full Text",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/SourceType"
+        },
+        "source_label": {
+          "title": "Source Label",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "relevance_score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relevance Score"
+        }
+      },
+      "required": [
+        "code",
+        "article_no",
+        "title",
+        "snippet",
+        "full_text",
+        "source_type",
+        "source_label"
+      ],
+      "title": "Reference",
+      "type": "object"
+    },
+    "RiskTier": {
+      "enum": [
+        "prohibited",
+        "high_risk",
+        "potential_high_risk",
+        "limited_risk",
+        "minimal_risk",
+        "unknown"
+      ],
+      "title": "RiskTier",
+      "type": "string"
+    },
+    "RuleFiring": {
+      "additionalProperties": false,
+      "description": "Symbolic Rules Panel reads this directly.",
+      "properties": {
+        "rule_id": {
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "fired": {
+          "title": "Fired",
+          "type": "boolean"
+        },
+        "when_conditions": {
+          "additionalProperties": true,
+          "title": "When Conditions",
+          "type": "object"
+        },
+        "evaluated_against": {
+          "additionalProperties": true,
+          "title": "Evaluated Against",
+          "type": "object"
+        },
+        "then_actions": {
+          "additionalProperties": true,
+          "title": "Then Actions",
+          "type": "object"
+        },
+        "supporting_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supporting Evidence Codes",
+          "type": "array"
+        },
+        "maps_to_refs": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Maps To Refs",
+          "type": "array"
+        },
+        "yaml_source": {
+          "title": "Yaml Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "description",
+        "fired",
+        "when_conditions",
+        "evaluated_against",
+        "then_actions",
+        "yaml_source"
+      ],
+      "title": "RuleFiring",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "SourceType": {
+      "enum": [
+        "legislation",
+        "guidance",
+        "national",
+        "commentary",
+        "uploaded"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    },
+    "Verdict": {
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "confidence_score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Confidence Score",
+          "type": "integer"
+        },
+        "confidence_label": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "reasoning_trail": {
+          "title": "Reasoning Trail",
+          "type": "string"
+        },
+        "caveats": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Caveats",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tier",
+        "confidence_score",
+        "confidence_label",
+        "reasoning_trail"
+      ],
+      "title": "Verdict",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "status": {
+      "$ref": "#/$defs/CaseStatus",
+      "default": "new"
+    },
+    "documents": {
+      "items": {
+        "$ref": "#/$defs/Document"
+      },
+      "title": "Documents",
+      "type": "array"
+    },
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Facts",
+      "type": "array"
+    },
+    "refs": {
+      "items": {
+        "$ref": "#/$defs/Reference"
+      },
+      "title": "Refs",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "$ref": "#/$defs/Assumption"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "rule_firings": {
+      "items": {
+        "$ref": "#/$defs/RuleFiring"
+      },
+      "title": "Rule Firings",
+      "type": "array"
+    },
+    "allegations": {
+      "items": {
+        "$ref": "#/$defs/Allegation"
+      },
+      "title": "Allegations",
+      "type": "array"
+    },
+    "defenses": {
+      "items": {
+        "$ref": "#/$defs/Defense"
+      },
+      "title": "Defenses",
+      "type": "array"
+    },
+    "objections": {
+      "items": {
+        "$ref": "#/$defs/Objection"
+      },
+      "title": "Objections",
+      "type": "array"
+    },
+    "verdict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Verdict"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "missing_evidence": {
+      "items": {
+        "$ref": "#/$defs/MissingEvidenceItem"
+      },
+      "title": "Missing Evidence",
+      "type": "array"
+    },
+    "governance_checklist": {
+      "items": {
+        "$ref": "#/$defs/ChecklistItem"
+      },
+      "title": "Governance Checklist",
+      "type": "array"
+    },
+    "follow_up_questions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Follow Up Questions",
+      "type": "array"
+    },
+    "agent_activity": {
+      "items": {
+        "$ref": "#/$defs/AgentActivity"
+      },
+      "title": "Agent Activity",
+      "type": "array"
+    },
+    "chat_history": {
+      "items": {
+        "$ref": "#/$defs/ChatTurn"
+      },
+      "title": "Chat History",
+      "type": "array"
+    },
+    "snapshot_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Snapshot Id"
+    }
+  },
+  "required": [
+    "case_id"
+  ],
+  "title": "CaseFile",
+  "type": "object"
+}

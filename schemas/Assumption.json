@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "description": "A-code — system-generated assumptions, must be confirmable. Code: `A-{n:02d}`.",
+  "properties": {
+    "code": {
+      "title": "Code",
+      "type": "string"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "reasoning": {
+      "title": "Reasoning",
+      "type": "string"
+    },
+    "needs_confirmation": {
+      "default": true,
+      "title": "Needs Confirmation",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "code",
+    "text",
+    "reasoning"
+  ],
+  "title": "Assumption",
+  "type": "object"
+}

@@ -1,0 +1,59 @@
+{
+  "$defs": {
+    "ConfidenceLabel": {
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "RiskTier": {
+      "enum": [
+        "prohibited",
+        "high_risk",
+        "potential_high_risk",
+        "limited_risk",
+        "minimal_risk",
+        "unknown"
+      ],
+      "title": "RiskTier",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "tier": {
+      "$ref": "#/$defs/RiskTier"
+    },
+    "confidence_score": {
+      "maximum": 10,
+      "minimum": 0,
+      "title": "Confidence Score",
+      "type": "integer"
+    },
+    "confidence_label": {
+      "$ref": "#/$defs/ConfidenceLabel"
+    },
+    "reasoning_trail": {
+      "title": "Reasoning Trail",
+      "type": "string"
+    },
+    "caveats": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Caveats",
+      "type": "array"
+    }
+  },
+  "required": [
+    "tier",
+    "confidence_score",
+    "confidence_label",
+    "reasoning_trail"
+  ],
+  "title": "Verdict",
+  "type": "object"
+}

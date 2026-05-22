@@ -1,0 +1,56 @@
+{
+  "additionalProperties": false,
+  "description": "Mitigation / exemption argument.",
+  "properties": {
+    "defense_id": {
+      "title": "Defense Id",
+      "type": "string"
+    },
+    "targets_allegation_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Targets Allegation Id"
+    },
+    "type": {
+      "title": "Type",
+      "type": "string"
+    },
+    "claim": {
+      "title": "Claim",
+      "type": "string"
+    },
+    "basis_evidence_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Basis Evidence Codes",
+      "type": "array"
+    },
+    "basis_ref_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Basis Ref Codes",
+      "type": "array"
+    },
+    "requires_documentation": {
+      "title": "Requires Documentation",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "defense_id",
+    "type",
+    "claim",
+    "requires_documentation"
+  ],
+  "title": "Defense",
+  "type": "object"
+}

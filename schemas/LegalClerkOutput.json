@@ -1,0 +1,105 @@
+{
+  "$defs": {
+    "Reference": {
+      "additionalProperties": false,
+      "description": "R-code — citations from the AI Act corpus.\n\nCode formats: `R-Art-{n}` / `R-Annex-{n}-{item}` / `R-Recital-{n}`\n/ `R-Guide-{slug}` / `R-FI-{slug}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "article_no": {
+          "title": "Article No",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "snippet": {
+          "title": "Snippet",
+          "type": "string"
+        },
+        "full_text": {
+          "title": "Full Text",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/SourceType"
+        },
+        "source_label": {
+          "title": "Source Label",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "relevance_score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Relevance Score"
+        }
+      },
+      "required": [
+        "code",
+        "article_no",
+        "title",
+        "snippet",
+        "full_text",
+        "source_type",
+        "source_label"
+      ],
+      "title": "Reference",
+      "type": "object"
+    },
+    "SourceType": {
+      "enum": [
+        "legislation",
+        "guidance",
+        "national",
+        "commentary",
+        "uploaded"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Legal Clerk retrieves relevant AI Act passages via RAG.",
+  "properties": {
+    "refs": {
+      "items": {
+        "$ref": "#/$defs/Reference"
+      },
+      "title": "Refs",
+      "type": "array"
+    },
+    "notes": {
+      "default": "",
+      "description": "Retrieval rationale (optional).",
+      "title": "Notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "refs"
+  ],
+  "title": "LegalClerkOutput",
+  "type": "object"
+}

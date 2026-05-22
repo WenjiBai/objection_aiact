@@ -1,0 +1,31 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "role": {
+      "title": "Role",
+      "type": "string"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "title": "Timestamp",
+      "type": "string"
+    },
+    "triggered_updates": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Triggered Updates",
+      "type": "array"
+    }
+  },
+  "required": [
+    "role",
+    "text"
+  ],
+  "title": "ChatTurn",
+  "type": "object"
+}
