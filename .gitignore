@@ -1,25 +1,23 @@
-__pycache__/
-*.pyc
-*.pyo
-.env
-*.egg-info/
-rag/chroma_store/
-
 # ---------- Python / packaging ----------
+__pycache__/
 *.py[cod]
 *$py.class
+*.egg
+*.egg-info/
+.eggs/
 build/
 dist/
-*.egg
-.eggs/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# ---------- Virtual envs / secrets ----------
+# ---------- Virtual envs ----------
 .venv/
 venv/
 env/
 ENV/
+
+# ---------- Secrets / credentials ----------
+.env
 .env.*
 !.env.example
 *.key
@@ -28,8 +26,6 @@ secrets.json
 credentials.json
 anthropic_api_key*
 .anthropic/
-
-# ---------- Streamlit ----------
 .streamlit/secrets.toml
 
 # ---------- Test / type / lint caches ----------
@@ -60,12 +56,13 @@ $RECYCLE.BIN/
 # ---------- Runtime persistence (CaseFile JSONs are not source-of-truth) ----------
 case_storage/
 
-# ---------- RAG: raw corpus + model caches ----------
+# ---------- RAG: vector indexes + raw corpus + model caches ----------
 # Keep curated chunks in rag/corpus.py; ignore bulky raw PDFs + indices.
+rag/chroma_store/
+**/chroma_store/
 rag/corpus/*.pdf
 rag/corpus/raw/
 rag/corpus/downloads/
-**/chroma_store/
 *.sqlite3
 *.duckdb
 .cache/
@@ -73,8 +70,9 @@ rag/corpus/downloads/
 sentence_transformers_cache/
 models/
 
-# ---------- Generated schemas / exports ----------
-# schemas/*.json is committed; ignore stale dumps elsewhere.
+# ---------- Generated artefacts ----------
+# schemas/*.json IS committed; ignore zipped/dumped copies.
+schemas.zip
 exports/
 out/
 output/
@@ -82,20 +80,15 @@ reports/
 *.pdf.tmp
 
 # ---------- Demo recordings / PPT working files ----------
-# Backup demo videos (OBS / Xbox Game Bar) — too big for git.
 *.mp4
 *.mkv
 *.mov
 *.avi
 recordings/
 demo_video/
-# PPT lock/backup files; final deck can be committed explicitly.
 ~$*.pptx
 ~$*.docx
 *.pptx.bak
-
-# ---------- Misc ignored artefacts ----------
-schemas.zip
 
 # ---------- Logs / temp ----------
 *.log
@@ -103,16 +96,3 @@ logs/
 tmp/
 temp/
 *.tmp
-
-# ---------- A-owned files (avoid conflicts with teammate) ----------
-# NOTE: .gitignore only affects UNTRACKED files. If these are already tracked,
-# use one of:
-#   git update-index --skip-worktree <file>     # keep local edits, don't push
-#   git rm --cached <file>                      # stop tracking, then ignore
-# A owns the real backend pipeline + symbolic evaluator + agent prompts.
-# Uncomment the lines below ONLY if you want B's local edits to never enter git.
-#
-# backend/api.py
-# backend/symbolic/
-# backend/agents/
-# backend/orchestration/
