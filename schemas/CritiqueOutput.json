@@ -1,0 +1,87 @@
+{
+  "$defs": {
+    "Objection": {
+      "additionalProperties": false,
+      "description": "Critique agent's challenge.",
+      "properties": {
+        "objection_id": {
+          "title": "Objection Id",
+          "type": "string"
+        },
+        "target_type": {
+          "title": "Target Type",
+          "type": "string"
+        },
+        "target_id": {
+          "title": "Target Id",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "challenging_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Challenging Evidence Codes",
+          "type": "array"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        }
+      },
+      "required": [
+        "objection_id",
+        "target_type",
+        "target_id",
+        "reason",
+        "severity"
+      ],
+      "title": "Objection",
+      "type": "object"
+    },
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Critique raises OBJECTIONS on weak/contradictory claims.",
+  "properties": {
+    "objections": {
+      "items": {
+        "$ref": "#/$defs/Objection"
+      },
+      "title": "Objections",
+      "type": "array"
+    },
+    "notes": {
+      "default": "",
+      "title": "Notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "objections"
+  ],
+  "title": "CritiqueOutput",
+  "type": "object"
+}

@@ -1,0 +1,170 @@
+# OBJECTION! AI ACT — Symbolic Risk Gate rules v1
+#
+# Format per Frontend_Backend_Sync_v1.md §4.2. Loader (Person A) injects each
+# rule's raw YAML text into the corresponding RuleFiring.yaml_source so the
+# Symbolic Rules Panel in the UI can show the source verbatim.
+#
+# Match semantics:
+#   - scalar value in `when` → equality match against fact's structured_value
+#   - list value in `when`   → "in" semantics (any element matches)
+#   - bool value             → matched as-is against typed fact
+#
+# Severities drive UI badge colour: high / medium / low.
+
+# ----------------------------------------------------------------- prohibited
+
+- id: R-PROHIBITED-EMOTION-WORK
+  description: Emotion recognition in workplace or education (Article 5 prohibition)
+  when:
+    sector: [employment, education]
+    output_type: [detection, classification]
+    output_subject: emotion
+  then:
+    preliminary_tier: prohibited
+    basis: "AI Act Article 5(1)(f) — emotion recognition in workplace and education"
+  maps_to_refs: [R-Art-5, R-Recital-44]
+  severity: high
+
+- id: R-PROHIBITED-SOCIAL-SCORE
+  description: Social scoring by public or private actors (Article 5 prohibition)
+  when:
+    output_type: [scoring, classification]
+    affected: [general_public, citizens]
+    purpose_signal: social_behaviour
+  then:
+    preliminary_tier: prohibited
+    basis: "AI Act Article 5(1)(c) — social scoring leading to detrimental treatment"
+  maps_to_refs: [R-Art-5, R-Recital-31]
+  severity: high
+
+# ------------------------------------------------------------ high-risk (Annex III)
+
+- id: R-HIRE-001
+  description: Employment-related ranking or screening (Annex III #4)
+  when:
+    sector: employment
+    output_type: [ranking, screening, recommendation, scoring]
+    affected: [job_applicants, workers]
+  then:
+    preliminary_tier: potential_high_risk
+    basis: "AI Act Annex III §4 — employment, workers management, access to self-employment"
+  maps_to_refs: [R-Annex-III-4, R-Art-6]
+  severity: high
+
+- id: R-CRED-001
+  description: Creditworthiness or credit-scoring of natural persons (Annex III #5(b))
+  when:
+    sector: [finance, essential_services]
+    output_type: [scoring, classification, decision]
+    purpose_signal: creditworthiness
+  then:
+    preliminary_tier: potential_high_risk
+    basis: "AI Act Annex III §5(b) — credit scoring of natural persons"
+  maps_to_refs: [R-Annex-III-5, R-Art-6]
+  severity: high
+
+- id: R-EDU-001
+  description: Education access, scoring, or assignment to institutions (Annex III #3)
+  when:
+    sector: education
+    output_type: [ranking, scoring, decision, classification]
+    affected: [students, applicants]
+  then:
+    preliminary_tier: potential_high_risk
+    basis: "AI Act Annex III §3 — education and vocational training access"
+  maps_to_refs: [R-Annex-III-3, R-Art-6]
+  severity: high
+
+- id: R-BIOMETRIC-001
+  description: Remote biometric identification or categorisation (Annex III #1)
+  when:
+    sector: [biometrics, law_enforcement]
+    output_type: [classification, detection, decision]
+  then:
+    preliminary_tier: potential_high_risk
+    basis: "AI Act Annex III §1 — biometric identification and categorisation"
+  maps_to_refs: [R-Annex-III-1, R-Art-6]
+  severity: high
+
+# --------------------------------------------------------- transparency / GPAI
+
+- id: R-CHAT-001
+  description: AI system interacting with humans (chatbot) → Article 50 transparency
+  when:
+    system_type: chatbot
+    user_interaction: direct
+  then:
+    transparency_obligation: true
+    basis: "AI Act Article 50(1) — disclose AI interaction to natural persons"
+  maps_to_refs: [R-Art-50, R-Recital-132]
+  severity: medium
+
+- id: R-GENAI-001
+  description: AI-generated or manipulated content → Article 50 labelling
+  when:
+    output_type: [generation]
+    ai_generated_content: true
+  then:
+    transparency_obligation: true
+    basis: "AI Act Article 50(2)/(4) — label synthetic or deep-fake content"
+  maps_to_refs: [R-Art-50, R-Recital-134]
+  severity: medium
+
+- id: R-GPAI-001
+  description: Use of general-purpose AI model → GPAI responsibility chain (Chapter V)
+  when:
+    gpai_present: true
+  then:
+    trigger: gpai_responsibility_chain_analysis
+    basis: "AI Act Chapter V — GPAI provider obligations and downstream documentation"
+  maps_to_refs: [R-Art-51, R-Art-53, R-Art-55]
+  severity: medium
+
+# ---------------------------------------------------- oversight & governance
+
+- id: R-OVERSIGHT-001
+  description: Human oversight claimed but not documented (override mechanism missing)
+  when:
+    human_oversight: unverified
+  then:
+    require_evidence: true
+    objection_target: oversight_claim
+    basis: "AI Act Article 14 — human oversight design and documentation"
+  maps_to_refs: [R-Art-14]
+  severity: medium
+
+- id: R-EXEMPT-PROCEDURAL
+  description: High-risk exemption — system performs only a narrow procedural task
+  when:
+    high_risk_candidate: true
+    automation_level: narrow_procedural
+  then:
+    exemption_candidate: true
+    requires_documentation: true
+    basis: "AI Act Article 6(3)(a) — narrow procedural task exemption"
+  maps_to_refs: [R-Art-6]
+  severity: low
+
+- id: R-EXEMPT-IMPROVE
+  description: High-risk exemption — system improves the result of previous human activity
+  when:
+    high_risk_candidate: true
+    automation_level: improves_human_activity
+  then:
+    exemption_candidate: true
+    requires_documentation: true
+    basis: "AI Act Article 6(3)(b) — improves previously completed human activity"
+  maps_to_refs: [R-Art-6]
+  severity: low
+
+- id: R-FRIA-REQUIRED
+  description: Deployer FRIA required for Annex III high-risk systems
+  when:
+    preliminary_tier: [high_risk, potential_high_risk]
+    deployer_type: [public_body, essential_services]
+  then:
+    require_evidence: true
+    obligation: fundamental_rights_impact_assessment
+    basis: "AI Act Article 27 — FRIA prior to deployment"
+  maps_to_refs: [R-Art-27]
+  severity: high

@@ -1,0 +1,331 @@
+{
+  "$defs": {
+    "Allegation": {
+      "additionalProperties": false,
+      "description": "Prosecutor's claim.",
+      "properties": {
+        "allegation_id": {
+          "title": "Allegation Id",
+          "type": "string"
+        },
+        "tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "claim": {
+          "title": "Claim",
+          "type": "string"
+        },
+        "basis_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Basis Evidence Codes",
+          "type": "array"
+        },
+        "basis_ref_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Basis Ref Codes",
+          "type": "array"
+        },
+        "strength": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "allegation_id",
+        "tier",
+        "claim",
+        "strength"
+      ],
+      "title": "Allegation",
+      "type": "object"
+    },
+    "ChatTurn": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "title": "Role",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "timestamp": {
+          "format": "date-time",
+          "title": "Timestamp",
+          "type": "string"
+        },
+        "triggered_updates": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Triggered Updates",
+          "type": "array"
+        }
+      },
+      "required": [
+        "role",
+        "text"
+      ],
+      "title": "ChatTurn",
+      "type": "object"
+    },
+    "ConfidenceLabel": {
+      "enum": [
+        "Low",
+        "Medium",
+        "High"
+      ],
+      "title": "ConfidenceLabel",
+      "type": "string"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "E-code — facts extracted from uploaded docs. Code format: `E-{n:02d}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "source_doc_id": {
+          "title": "Source Doc Id",
+          "type": "string"
+        },
+        "source_locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Locator"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "structured_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Value"
+        },
+        "category": {
+          "$ref": "#/$defs/EvidenceCategory"
+        },
+        "relevance": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "code",
+        "source_doc_id",
+        "text",
+        "category",
+        "relevance"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceCategory": {
+      "enum": [
+        "purpose",
+        "users",
+        "affected_persons",
+        "sector",
+        "input_data",
+        "output",
+        "automation_level",
+        "human_oversight",
+        "deployment_context",
+        "ai_generated_content",
+        "gpai_usage",
+        "decision_impact",
+        "other"
+      ],
+      "title": "EvidenceCategory",
+      "type": "string"
+    },
+    "Objection": {
+      "additionalProperties": false,
+      "description": "Critique agent's challenge.",
+      "properties": {
+        "objection_id": {
+          "title": "Objection Id",
+          "type": "string"
+        },
+        "target_type": {
+          "title": "Target Type",
+          "type": "string"
+        },
+        "target_id": {
+          "title": "Target Id",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/Severity"
+        },
+        "challenging_evidence_codes": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Challenging Evidence Codes",
+          "type": "array"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
+        }
+      },
+      "required": [
+        "objection_id",
+        "target_type",
+        "target_id",
+        "reason",
+        "severity"
+      ],
+      "title": "Objection",
+      "type": "object"
+    },
+    "RiskTier": {
+      "enum": [
+        "prohibited",
+        "high_risk",
+        "potential_high_risk",
+        "limited_risk",
+        "minimal_risk",
+        "unknown"
+      ],
+      "title": "RiskTier",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    },
+    "Verdict": {
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "$ref": "#/$defs/RiskTier"
+        },
+        "confidence_score": {
+          "maximum": 10,
+          "minimum": 0,
+          "title": "Confidence Score",
+          "type": "integer"
+        },
+        "confidence_label": {
+          "$ref": "#/$defs/ConfidenceLabel"
+        },
+        "reasoning_trail": {
+          "title": "Reasoning Trail",
+          "type": "string"
+        },
+        "caveats": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Caveats",
+          "type": "array"
+        }
+      },
+      "required": [
+        "tier",
+        "confidence_score",
+        "confidence_label",
+        "reasoning_trail"
+      ],
+      "title": "Verdict",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One cross-examination turn — the diff the Judge wants applied.\n\nFrontend reads `judge_turn` to render. Backend applies the rest as a diff\nonto the CaseFile (add new evidence, resolve objections, update verdict).",
+  "properties": {
+    "judge_turn": {
+      "$ref": "#/$defs/ChatTurn"
+    },
+    "new_facts": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "New Facts",
+      "type": "array"
+    },
+    "new_allegations": {
+      "items": {
+        "$ref": "#/$defs/Allegation"
+      },
+      "title": "New Allegations",
+      "type": "array"
+    },
+    "new_objections": {
+      "items": {
+        "$ref": "#/$defs/Objection"
+      },
+      "title": "New Objections",
+      "type": "array"
+    },
+    "resolved_objection_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Resolved Objection Ids",
+      "type": "array"
+    },
+    "resolved_missing_evidence_descriptions": {
+      "description": "Match-by-description since MissingEvidenceItem has no id.",
+      "items": {
+        "type": "string"
+      },
+      "title": "Resolved Missing Evidence Descriptions",
+      "type": "array"
+    },
+    "updated_verdict": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Verdict"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    }
+  },
+  "required": [
+    "judge_turn"
+  ],
+  "title": "ChatOutput",
+  "type": "object"
+}

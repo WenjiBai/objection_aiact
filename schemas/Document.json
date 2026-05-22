@@ -1,0 +1,46 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "doc_id": {
+      "title": "Doc Id",
+      "type": "string"
+    },
+    "filename": {
+      "title": "Filename",
+      "type": "string"
+    },
+    "mime_type": {
+      "title": "Mime Type",
+      "type": "string"
+    },
+    "content": {
+      "title": "Content",
+      "type": "string"
+    },
+    "page_count": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Page Count"
+    },
+    "uploaded_at": {
+      "format": "date-time",
+      "title": "Uploaded At",
+      "type": "string"
+    }
+  },
+  "required": [
+    "doc_id",
+    "filename",
+    "mime_type",
+    "content"
+  ],
+  "title": "Document",
+  "type": "object"
+}

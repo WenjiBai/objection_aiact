@@ -1,0 +1,65 @@
+{
+  "$defs": {
+    "RiskTier": {
+      "enum": [
+        "prohibited",
+        "high_risk",
+        "potential_high_risk",
+        "limited_risk",
+        "minimal_risk",
+        "unknown"
+      ],
+      "title": "RiskTier",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Prosecutor's claim.",
+  "properties": {
+    "allegation_id": {
+      "title": "Allegation Id",
+      "type": "string"
+    },
+    "tier": {
+      "$ref": "#/$defs/RiskTier"
+    },
+    "claim": {
+      "title": "Claim",
+      "type": "string"
+    },
+    "basis_evidence_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Basis Evidence Codes",
+      "type": "array"
+    },
+    "basis_ref_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Basis Ref Codes",
+      "type": "array"
+    },
+    "strength": {
+      "$ref": "#/$defs/Severity"
+    }
+  },
+  "required": [
+    "allegation_id",
+    "tier",
+    "claim",
+    "strength"
+  ],
+  "title": "Allegation",
+  "type": "object"
+}

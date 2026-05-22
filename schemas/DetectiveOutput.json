@@ -1,0 +1,111 @@
+{
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "E-code — facts extracted from uploaded docs. Code format: `E-{n:02d}`.",
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "source_doc_id": {
+          "title": "Source Doc Id",
+          "type": "string"
+        },
+        "source_locator": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Locator"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "structured_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Structured Value"
+        },
+        "category": {
+          "$ref": "#/$defs/EvidenceCategory"
+        },
+        "relevance": {
+          "$ref": "#/$defs/Severity"
+        }
+      },
+      "required": [
+        "code",
+        "source_doc_id",
+        "text",
+        "category",
+        "relevance"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "EvidenceCategory": {
+      "enum": [
+        "purpose",
+        "users",
+        "affected_persons",
+        "sector",
+        "input_data",
+        "output",
+        "automation_level",
+        "human_oversight",
+        "deployment_context",
+        "ai_generated_content",
+        "gpai_usage",
+        "decision_impact",
+        "other"
+      ],
+      "title": "EvidenceCategory",
+      "type": "string"
+    },
+    "Severity": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "title": "Severity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Detective extracts facts from uploaded documents.",
+  "properties": {
+    "facts": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "title": "Facts",
+      "type": "array"
+    },
+    "notes": {
+      "default": "",
+      "description": "Free-text reasoning summary (optional).",
+      "title": "Notes",
+      "type": "string"
+    }
+  },
+  "required": [
+    "facts"
+  ],
+  "title": "DetectiveOutput",
+  "type": "object"
+}

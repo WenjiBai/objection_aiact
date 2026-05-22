@@ -1,0 +1,50 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "item": {
+      "title": "Item",
+      "type": "string"
+    },
+    "applies": {
+      "title": "Applies",
+      "type": "boolean"
+    },
+    "ai_act_reference": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ai Act Reference"
+    },
+    "evidence_codes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Evidence Codes",
+      "type": "array"
+    },
+    "note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Note"
+    }
+  },
+  "required": [
+    "item",
+    "applies"
+  ],
+  "title": "ChecklistItem",
+  "type": "object"
+}
