@@ -94,6 +94,9 @@ demo_video/
 ~$*.docx
 *.pptx.bak
 
+# ---------- Misc ignored artefacts ----------
+schemas.zip
+
 # ---------- Logs / temp ----------
 *.log
 logs/
