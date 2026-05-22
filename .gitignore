@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
+*.pyo
 .env
 *.egg-info/
 rag/chroma_store/
@@ -55,6 +56,9 @@ coverage.xml
 Thumbs.db
 desktop.ini
 $RECYCLE.BIN/
+
+# ---------- Runtime persistence (CaseFile JSONs are not source-of-truth) ----------
+case_storage/
 
 # ---------- RAG: raw corpus + model caches ----------
 # Keep curated chunks in rag/corpus.py; ignore bulky raw PDFs + indices.
