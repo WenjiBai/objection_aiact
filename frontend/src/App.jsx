@@ -152,7 +152,7 @@ function CorpusDialog({ onClose }) {
 }
 
 export default function App() {
-  const [mode, setMode] = React.useState("dark");
+  const [mode, setMode] = React.useState("light");
   const [caseFile, setCaseFile] = React.useState(null);
   const [errorToast, setErrorToast] = React.useState(null);
   const [isRunning, setIsRunning] = React.useState(false);
