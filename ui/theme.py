@@ -308,10 +308,46 @@ def apply_theme(theme: dict | None = None) -> None:
             color: var(--aa-text);
         }}
 
-        [data-testid="stHeader"] {{ display: none; }}
+        /* Header: keep visible & interactive so the "reopen sidebar" button is
+           always reachable. We only strip its background/decoration, never its
+           height or pointer-events — collapsing it to 0px was hiding the
+           collapsed-control button once the user closed the sidebar. */
+        [data-testid="stHeader"] {{
+            background: transparent !important;
+        }}
+        [data-testid="stHeader"]::before {{
+            background: transparent !important;
+        }}
         [data-testid="stToolbar"],
         [data-testid="stDecoration"],
         [data-testid="stStatusWidget"] {{ display: none !important; }}
+
+        /* Sidebar reopen button — covers both legacy (collapsedControl) and
+           current (stSidebarCollapsedControl) Streamlit test-ids. Pinned to
+           the viewport so header height never affects reachability. */
+        [data-testid="collapsedControl"],
+        [data-testid="stSidebarCollapsedControl"] {{
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            position: fixed !important;
+            top: 12px;
+            left: 12px;
+            z-index: 999999;
+            background: var(--aa-surface-elev) !important;
+            border: 1px solid var(--aa-border) !important;
+            border-radius: 8px !important;
+            box-shadow: var(--aa-shadow-md);
+            pointer-events: auto !important;
+        }}
+        [data-testid="collapsedControl"] button,
+        [data-testid="stSidebarCollapsedControl"] button,
+        [data-testid="collapsedControl"] svg,
+        [data-testid="stSidebarCollapsedControl"] svg {{
+            color: var(--aa-text) !important;
+            fill: var(--aa-text) !important;
+            pointer-events: auto !important;
+        }}
 
         /* ------------------------------------------ scrollbars */
         ::-webkit-scrollbar {{ width: 10px; height: 10px; }}
@@ -363,7 +399,8 @@ def apply_theme(theme: dict | None = None) -> None:
 
         /* ------------------------------------------ buttons */
         .stButton > button,
-        .stDownloadButton > button {{
+        .stDownloadButton > button,
+        .stFormSubmitButton > button {{
             background: var(--aa-surface);
             color: var(--aa-text);
             border: 1px solid var(--aa-border);
@@ -374,18 +411,21 @@ def apply_theme(theme: dict | None = None) -> None:
             transition: all 160ms ease;
         }}
         .stButton > button:hover,
-        .stDownloadButton > button:hover {{
+        .stDownloadButton > button:hover,
+        .stFormSubmitButton > button:hover {{
             border-color: var(--aa-border-strong);
             background: var(--aa-surface-elev);
             transform: translateY(-1px);
         }}
-        .stButton > button[kind="primary"] {{
+        .stButton > button[kind="primary"],
+        .stFormSubmitButton > button[kind="primary"] {{
             background: linear-gradient(135deg, var(--aa-primary), var(--aa-primary-strong));
             color: #ffffff;
             border-color: transparent;
             box-shadow: 0 6px 18px var(--aa-primary-glow);
         }}
-        .stButton > button[kind="primary"]:hover {{
+        .stButton > button[kind="primary"]:hover,
+        .stFormSubmitButton > button[kind="primary"]:hover {{
             filter: brightness(1.05);
             box-shadow: 0 10px 26px var(--aa-primary-glow);
         }}
@@ -1206,15 +1246,25 @@ def apply_theme(theme: dict | None = None) -> None:
             margin-top: 16px;
         }}
         .act-chat-head {{
-            display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 5px;
+            margin: 8px 0 14px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--aa-border);
         }}
         .act-chat-title {{
             color: var(--aa-text-strong);
-            font-size: 14px; font-weight: 700;
+            font-size: 15px; font-weight: 700;
+            line-height: 1.35;
             display: flex; align-items: center; gap: 8px;
         }}
-        .act-chat-hint {{ color: var(--aa-subtle); font-size: 11px; }}
+        .act-chat-hint {{
+            color: var(--aa-subtle);
+            font-size: 12px;
+            line-height: 1.4;
+            white-space: normal;
+        }}
 
         [data-testid="stChatMessage"] {{
             background: var(--aa-surface-elev) !important;
@@ -1226,8 +1276,11 @@ def apply_theme(theme: dict | None = None) -> None:
         [data-testid="stChatMessage"] p {{ color: var(--aa-text) !important; }}
 
         [data-testid="stChatInput"] {{
-            background: transparent !important;
-            border-top: 1px solid var(--aa-border) !important;
+            display: none !important;
+        }}
+        [data-testid="stBottom"],
+        [data-testid="stBottomBlockContainer"] {{
+            display: none !important;
         }}
         [data-testid="stChatInput"] > div {{
             background: transparent !important;
@@ -1248,13 +1301,40 @@ def apply_theme(theme: dict | None = None) -> None:
         [data-testid="stChatInput"] button * {{ color: white !important; }}
 
         .act-followup-chip {{
-            display: inline-flex; align-items: center; gap: 6px;
+            display: flex; align-items: flex-start; gap: 8px;
+            width: 100%;
+            box-sizing: border-box;
             background: var(--aa-primary-soft);
             color: var(--aa-primary-strong);
-            border-radius: 999px;
-            padding: 5px 10px;
-            font-size: 11.5px;
-            margin: 2px 4px 2px 0;
+            border: 1px solid rgba(129, 140, 248, 0.20);
+            border-radius: 8px;
+            padding: 9px 11px;
+            font-size: 12.5px;
+            line-height: 1.4;
+            margin: 0 0 8px;
+            white-space: normal;
+        }}
+        .act-followup-stack-label {{
+            color: var(--aa-subtle);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 0 0 7px;
+            text-transform: uppercase;
+        }}
+        [data-testid="stForm"] {{
+            border: 1px solid var(--aa-border);
+            border-radius: var(--aa-radius);
+            background: var(--aa-surface-muted);
+            padding: 10px 10px 12px;
+            margin-top: 12px;
+        }}
+        [data-testid="stForm"] [data-testid="stTextArea"] textarea {{
+            min-height: 92px !important;
+            resize: vertical;
+        }}
+        [data-testid="stForm"] .stButton > button {{
+            margin-top: 4px;
         }}
 
         /* ============================================================
@@ -1273,12 +1353,109 @@ def apply_theme(theme: dict | None = None) -> None:
             .act-verdict-top {{ flex-direction: column; align-items: flex-start; }}
         }}
         @media (max-width: 760px) {{
+            .act-case-banner {{
+                align-items: flex-start;
+                flex-direction: column;
+                position: relative;
+            }}
+            .act-case-title {{
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }}
+            .act-case-title .filename {{
+                max-width: 210px;
+            }}
+            .act-case-actions {{
+                flex-wrap: wrap;
+                width: 100%;
+            }}
             .act-stepper {{ grid-template-columns: repeat(2, 1fr); }}
             .act-evidence-grid {{ grid-template-columns: 1fr; }}
+        }}
+        /* Always-visible fallback button to reopen the sidebar. Streamlit's
+           built-in collapsed-control sometimes disappears across versions /
+           when localStorage persists a hidden state — this button never does. */
+        #act-reopen-sidebar {{
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 1000000;
+            width: 38px;
+            height: 38px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: var(--aa-surface-elev);
+            color: var(--aa-text);
+            border: 1px solid var(--aa-border);
+            border-radius: 8px;
+            box-shadow: var(--aa-shadow-md);
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 700;
+            user-select: none;
+            transition: background 160ms ease, transform 160ms ease;
+        }}
+        #act-reopen-sidebar:hover {{
+            background: var(--aa-surface);
+            transform: translateY(-1px);
         }}
         </style>
     """)
     st.html(_css)
+    # JS: render a floating button when the sidebar is collapsed. Clicking it
+    # tries every known Streamlit selector for "expand sidebar". Robust against
+    # data-testid changes and persisted localStorage collapsed state.
+    st.html(
+        """
+        <div id="act-reopen-sidebar" title="Show sidebar">&#9776;</div>
+        <script>
+        (function () {
+          const btn = window.parent.document.getElementById('act-reopen-sidebar')
+                    || document.getElementById('act-reopen-sidebar');
+          if (!btn) return;
+          const doc = window.parent.document || document;
+
+          function sidebarCollapsed() {
+            const sb = doc.querySelector('[data-testid="stSidebar"]');
+            if (!sb) return true;
+            const aria = sb.getAttribute('aria-expanded');
+            if (aria === 'false') return true;
+            const r = sb.getBoundingClientRect();
+            return r.width < 20 || r.right <= 0;
+          }
+
+          function tryOpen() {
+            const selectors = [
+              '[data-testid="stSidebarCollapsedControl"] button',
+              '[data-testid="stSidebarCollapsedControl"]',
+              '[data-testid="collapsedControl"] button',
+              '[data-testid="collapsedControl"]',
+              '[data-testid="stSidebarCollapseButton"] button',
+              '[data-testid="stSidebarCollapseButton"]',
+              'button[kind="header"]',
+            ];
+            for (const s of selectors) {
+              const el = doc.querySelector(s);
+              if (el) { el.click(); return true; }
+            }
+            // Last resort: clear persisted collapsed state and reload.
+            try { window.parent.localStorage.clear(); } catch (e) {}
+            window.parent.location.reload();
+            return false;
+          }
+
+          btn.addEventListener('click', tryOpen);
+
+          function refresh() {
+            btn.style.display = sidebarCollapsed() ? 'flex' : 'none';
+          }
+          refresh();
+          setInterval(refresh, 400);
+        })();
+        </script>
+        """
+    )
 
 
 def render_token_export() -> None:

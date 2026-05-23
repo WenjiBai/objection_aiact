@@ -256,8 +256,9 @@ else:
         missing_and_governance(case)
         agent_activity_timeline(case)
 
+    user_text = None
+
     with right:
-        st.html('<div class="act-chat-wrap">')
         st.html(
             """
             <div class="act-chat-head">
@@ -275,9 +276,24 @@ else:
                 f'<div style="margin-bottom:10px;">{chips}</div>'
             )
         chat_history(case)
-        st.html("</div>")
+        with st.form("cross_exam_form", clear_on_submit=True, border=False):
+            typed = st.text_area(
+                "Cross-examination input",
+                placeholder="Answer a follow-up, add a fact, or challenge the verdict...",
+                height=92,
+                label_visibility="collapsed",
+            )
+            submitted = st.form_submit_button(
+                "Submit to judge",
+                type="primary",
+                use_container_width=True,
+            )
+            if submitted and typed.strip():
+                st.session_state.cross_exam_pending = typed.strip()
 
     user_text = st.chat_input("Answer a follow-up, add a fact, or challenge the verdict…")
+    if not user_text:
+        user_text = st.session_state.pop("cross_exam_pending", None)
     if user_text:
         # Sync v1 §6.3 — snapshot before mutation; restore on failure.
         snap = snapshot(case)
