@@ -10,11 +10,11 @@ The symbolic gate is an internal step — it pushes NO AgentActivity entry.
 Each of the 6 agents pushes exactly one COMPLETED (or FAILED) entry, so the
 final CaseFile has exactly 6 agent_activity rows in the timeline.
 
-`handle_chat` still delegates to `shared.mock.simulate_chat_response` —
-Phase 5 will replace it with a real Judge re-evaluation loop.
+`handle_chat` runs the ChatAgent (real Judge re-evaluation, Phase 5).
 """
 from __future__ import annotations
 
+from backend.agents.chat import ChatAgent
 from backend.agents.critique import CritiqueAgent
 from backend.agents.defense import DefenseAgent
 from backend.agents.detective import DetectiveAgent
@@ -41,6 +41,7 @@ class Orchestrator:
         self.defense = DefenseAgent()
         self.critique = CritiqueAgent()
         self.judge = JudgeAgent()
+        self.chat = ChatAgent()
 
     # ---------------------------------------------------- public entry points
 
@@ -74,9 +75,8 @@ class Orchestrator:
         return case
 
     def handle_chat(self, case: CaseFile, user_text: str) -> CaseFile:
-        """One cross-examination turn. Phase-5 will replace with real LLM Judge re-eval."""
-        from shared.mock import simulate_chat_response
-        return simulate_chat_response(case, user_text)
+        """One cross-examination turn — real LLM Judge re-evaluation (Phase 5)."""
+        return self.chat.run(case, user_text)
 
 
 __all__ = ["Orchestrator"]

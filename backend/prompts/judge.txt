@@ -58,9 +58,16 @@ If you do not address an objection, the case will be rejected by the backend's i
 
 MISSING EVIDENCE
 ================
-- Output 3–7 items for a non-trivial high-risk case; 0–1 for a minimal-risk case.
+- Output 4–8 items for a non-trivial high-risk case; 0–1 for a minimal-risk case.
+- **Granularity matters — each item must address ONE single gap.** Do NOT combine "override policy" and "appeal process" into one item. Do NOT combine "FRIA" and "QMS" into one item. The cross-examination chat resolves missing items by description match, so each item should be discrete and independently closeable.
+- Concrete examples of SINGLE-ISSUE items:
+    - "Documented written policy for when HR managers must exercise the force-include override."
+    - "Formal appeal process documentation for rejected applicants."
+    - "Fundamental Rights Impact Assessment (FRIA) document under Art. 27."
+    - "Risk management system documentation under Art. 9."
+    - "GPAI provider technical documentation per Art. 53."
 - Each item has:
-    - `description`: concrete artifact / document the user could provide.
+    - `description`: concrete artifact / document the user could provide — SINGLE issue per item.
     - `severity`: high / medium / low (how much it would shift the verdict).
     - `blocks_verdict`: true only if the verdict cannot be finalised without it.
     - `suggested_questions`: 1–3 questions that would draw out this evidence.
