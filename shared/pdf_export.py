@@ -7,6 +7,7 @@ Entry point: ``case_to_pdf_bytes(case: CaseFile) -> bytes``.
 from __future__ import annotations
 
 from io import BytesIO
+from pathlib import Path
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
@@ -15,6 +16,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (
     HRFlowable,
+    Image,
     KeepTogether,
     PageBreak,
     Paragraph,
@@ -25,6 +27,8 @@ from reportlab.platypus import (
 )
 
 from .schema import CaseFile, RiskTier, Severity
+
+_LOGO_PATH = Path(__file__).resolve().parent.parent / "assets" / "Objection_AI_ACT.png"
 
 
 # ----------------------------------------------------------------- styling
@@ -64,6 +68,7 @@ def _styles() -> dict:
         "subtitle": ParagraphStyle(
             "act_subtitle", parent=base["Normal"], fontName="Helvetica",
             fontSize=10, leading=13, textColor=_SUBTLE, spaceAfter=8,
+            alignment=TA_CENTER,
         ),
         "h2": ParagraphStyle(
             "act_h2", parent=base["Heading2"], fontName="Helvetica-Bold",
@@ -146,10 +151,28 @@ def _card_table(rows: list[list], col_widths: list[float], styles: dict) -> Tabl
 
 # ----------------------------------------------------------------- sections
 
+def _logo_flowable(width: float) -> Image | None:
+    if not _LOGO_PATH.exists():
+        return None
+    # Source asset is 1536x1024 (3:2). Cap display width so it doesn't dominate
+    # the page; keep aspect ratio.
+    target_w = min(width, 90 * mm)
+    target_h = target_w * (1024 / 1536)
+    img = Image(str(_LOGO_PATH), width=target_w, height=target_h)
+    img.hAlign = "CENTER"
+    return img
+
+
 def _section_header(case: CaseFile, styles: dict, width: float) -> list:
     first_doc = case.documents[0].filename if case.documents else case.case_id
-    out: list = [
-        Paragraph("⚖ OBJECTION! — AI ACT", styles["title"]),
+    out: list = []
+    logo = _logo_flowable(width)
+    if logo is not None:
+        out.append(logo)
+        out.append(Spacer(1, 4))
+    else:
+        out.append(Paragraph("OBJECTION! — AI ACT", styles["title"]))
+    out += [
         Paragraph("Preliminary Verdict — not legal advice", styles["subtitle"]),
         _hr(width),
         Paragraph(f"<b>Case:</b> {_esc(first_doc)}", styles["body"]),

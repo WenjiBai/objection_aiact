@@ -208,6 +208,87 @@ def landing_hero():
     )
 
 
+@st.dialog("📚 AI Act corpus", width="large")
+def _corpus_dialog():
+    from rag.corpus import SEED_CHUNKS
+
+    st.caption(
+        f"{len(SEED_CHUNKS)} curated chunks from Regulation (EU) 2024/1689 "
+        "and related guidance. These are the grounded references the Legal "
+        "Clerk and Symbolic Risk Gate cite via **R-codes**."
+    )
+
+    query = st.text_input(
+        "Filter", placeholder="article number, keyword, or R-code",
+        label_visibility="collapsed", key="corpus_dialog_filter",
+    ).strip().lower()
+
+    def _match(r) -> bool:
+        if not query:
+            return True
+        hay = f"{r.code} {r.article_no} {r.title} {r.snippet}".lower()
+        return query in hay
+
+    shown = [r for r in SEED_CHUNKS if _match(r)]
+    st.caption(f"Showing **{len(shown)}** of {len(SEED_CHUNKS)}")
+
+    for ref in shown:
+        with st.expander(f"`{ref.code}` — {ref.title}"):
+            meta = f"**Article {ref.article_no}** · {ref.source_label} · _{ref.source_type.value}_"
+            st.markdown(meta)
+            st.markdown(ref.snippet)
+            with st.popover("Full text"):
+                st.markdown(ref.full_text)
+            if ref.url:
+                st.markdown(f"[Open source ↗]({ref.url})")
+
+
+@st.dialog("❓ How to use OBJECTION! AI ACT", width="large")
+def _guide_dialog():
+    st.markdown(
+        """
+**OBJECTION! AI ACT** runs a 6-agent courtroom over your AI use case and
+returns a *Preliminary Verdict* under the EU AI Act — with citations,
+uncertainty, missing evidence, and a governance checklist.
+
+> This is a first-pass assessment, **not legal advice.**
+
+### 1. Provide a case
+Upload vendor white papers, model cards, policy notes, or DPIAs
+(PDF / DOCX / PPTX / TXT / MD), **or** paste a short use-case description.
+
+### 2. The courtroom runs
+Six agents read & write one shared **CaseFile**:
+
+| # | Agent | What it does |
+|---|---|---|
+| 1 | 🔍 Detective | Extracts facts as **E-codes** |
+| 2 | 📚 Legal Clerk | Pulls AI Act references as **R-codes** |
+| 3 | ⚙ Symbolic Risk Gate | Fires inspectable YAML rules |
+| 4 | ⚖ Prosecutor | Raises risk **allegations (A-codes)** |
+| 5 | 🛡 Defense | Checks mitigations and exemptions |
+| 6 | 🔔 Critique → Judge | Issues **OBJECTION!** events and the verdict |
+
+### 3. Read the verdict
+- **Risk tier** — Prohibited / High / Limited / Minimal (or Unknown).
+- **Confidence** — 0–10 with LOW / MEDIUM / HIGH label.
+- **Rule trace** — every fired symbolic rule with raw YAML source.
+- **Missing evidence** — what would raise confidence or change the tier.
+- **Governance checklist** — concrete next steps (Art. 9, 10, 13, 14, 26 …).
+
+### 4. Cross-examine
+Use the chat to add facts ("HR managers can override the ranking and
+applicants can appeal"). The CaseFile is snapshotted, mutated, and the
+verdict / confidence updates live.
+
+### Tips for the demo
+- Try **Case A** (HR CV-screening) → expect *Potential High-Risk*.
+- Try **Case B** (inventory forecaster) → expect *Minimal Risk*.
+- Open **📚 AI Act corpus** to browse the 29 grounded references.
+        """
+    )
+
+
 def upload_topbar():
     st.html(
         """
@@ -223,6 +304,17 @@ def upload_topbar():
         </div>
         """
     )
+    # Real click targets rendered immediately below the styled bar.
+    # Kept minimal — the dialogs themselves carry the brand styling.
+    _, c1, c2 = st.columns([6, 1.4, 1.0])
+    with c1:
+        if st.button("Open AI Act corpus", key="topbar_corpus_btn",
+                     use_container_width=True):
+            _corpus_dialog()
+    with c2:
+        if st.button("Open Guide", key="topbar_guide_btn",
+                     use_container_width=True):
+            _guide_dialog()
 
 
 def case_file_summary(case: CaseFile):

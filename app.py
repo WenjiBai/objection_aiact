@@ -6,6 +6,7 @@ Run:  streamlit run app.py
 from __future__ import annotations
 
 import uuid
+from pathlib import Path
 
 import streamlit as st
 
@@ -100,18 +101,12 @@ def _build_new_case(uploaded_files, pasted_text: str = "") -> tuple[CaseFile, li
 
 # ---------------------------------------------------------------- sidebar
 
+_LOGO_PATH = Path(__file__).resolve().parent / "assets" / "Objection_AI_ACT.png"
+
 with st.sidebar:
+    st.image(str(_LOGO_PATH), use_container_width=True)
     st.html(
-        """
-        <div class="act-brand">
-          <span class="mark">⚖</span>
-          <div class="act-brand-stack">
-            <span class="name">OBJECTION!</span>
-            <span class="tag">AI ACT</span>
-          </div>
-        </div>
-        <div class="act-brand-sub">Puts your AI use case on trial.</div>
-        """
+        '<div class="act-brand-sub">Puts your AI use case on trial.</div>'
     )
 
     # Theme mode toggle
