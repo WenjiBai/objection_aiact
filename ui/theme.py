@@ -273,17 +273,24 @@ def apply_theme(theme: dict | None = None) -> None:
         "radial-gradient(900px 500px at 110% 10%, rgba(217,119,6,0.06), transparent 60%)"
     )
 
-    # NOTE: emit via st.html, not st.markdown. Markdown treats any line indented
-    # 4+ spaces as a code block — which is why a previous version of this file
-    # rendered the entire stylesheet as visible text. textwrap.dedent removes the
-    # 8-space Python indent so <style> ends up at column 0, and st.html bypasses
-    # the markdown engine entirely. <link> tags get sanitized away by Streamlit,
-    # so fonts are loaded via @import inside the <style> block.
+    # NOTE: emit the stylesheet via st.markdown, not st.html. In Streamlit 1.57,
+    # st.html sanitizes <style> tags out of normal HTML blocks and routes
+    # style-only blocks through an event container that doesn't apply here.
+    # The interpolated CSS vars are padded before textwrap.dedent so <style>
+    # starts at column 0; otherwise Markdown treats indented HTML as code.
+    # NOTE: previous versions used `@import url('https://fonts.googleapis.com/...')`
+    # to pull Inter + JetBrains Mono. When the fetch fails (offline, corporate
+    # proxy blocking fonts.googleapis.com, strict CSP), Chrome logs
+    # "Verify stylesheet URLs / This page failed to load a stylesheet from a URL"
+    # AND — until the network request actually times out — defers applying the
+    # rest of the rules in the same <style> block. That looked like "all CSS
+    # broke; default Streamlit chrome is showing". --aa-font already lists
+    # robust system fallbacks (Segoe UI on Windows), so we drop the @import.
+    css_vars = textwrap.indent(_css_vars(theme), "      ")
     _css = textwrap.dedent(f"""\
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
         :root {{
-        {_css_vars(theme)}
+        {css_vars}
           --aa-shadow-sm: 0 1px 2px rgba(0,0,0,{0.35 if is_dark else 0.04});
           --aa-shadow-md: 0 4px 14px rgba(0,0,0,{0.40 if is_dark else 0.06}),
                           0 1px 3px rgba(0,0,0,{0.30 if is_dark else 0.04});
@@ -308,15 +315,18 @@ def apply_theme(theme: dict | None = None) -> None:
             color: var(--aa-text);
         }}
 
-        /* Header: keep visible & interactive so the "reopen sidebar" button is
-           always reachable. We only strip its background/decoration, never its
-           height or pointer-events — collapsing it to 0px was hiding the
-           collapsed-control button once the user closed the sidebar. */
-        [data-testid="stHeader"] {{
+        /* Header: keep the layer present so Streamlit can mount its sidebar
+           controls, but make the transparent chrome click-through. Otherwise
+           the hidden toolbar still sits over the first row of app buttons. */
+        [data-testid="stHeader"],
+        header.stAppHeader {{
             background: transparent !important;
+            pointer-events: none !important;
         }}
-        [data-testid="stHeader"]::before {{
+        [data-testid="stHeader"]::before,
+        header.stAppHeader::before {{
             background: transparent !important;
+            pointer-events: none !important;
         }}
         [data-testid="stToolbar"],
         [data-testid="stDecoration"],
@@ -398,34 +408,56 @@ def apply_theme(theme: dict | None = None) -> None:
         p, li, label, span {{ color: inherit; }}
 
         /* ------------------------------------------ buttons */
-        .stButton > button,
-        .stDownloadButton > button,
-        .stFormSubmitButton > button {{
-            background: var(--aa-surface);
-            color: var(--aa-text);
-            border: 1px solid var(--aa-border);
+        [data-testid="stButton"] button,
+        [data-testid="stDownloadButton"] button,
+        [data-testid="stFormSubmitButton"] button,
+        .stButton button,
+        .stDownloadButton button,
+        .stFormSubmitButton button {{
+            background: var(--aa-surface) !important;
+            color: var(--aa-text) !important;
+            border: 1px solid var(--aa-border) !important;
             border-radius: 10px;
             min-height: 36px;
             font-size: 13px;
             font-weight: 500;
             transition: all 160ms ease;
         }}
-        .stButton > button:hover,
-        .stDownloadButton > button:hover,
-        .stFormSubmitButton > button:hover {{
-            border-color: var(--aa-border-strong);
-            background: var(--aa-surface-elev);
+        /* Streamlit wraps button labels in <p data-testid="stMarkdownContainer">
+           and uses an emotion class to hard-set its color. A plain `p` color
+           rule is outranked, so the label stops following light/dark mode.
+           Force inherit here. */
+        [data-testid="stButton"] button *,
+        [data-testid="stDownloadButton"] button *,
+        [data-testid="stFormSubmitButton"] button *,
+        .stButton button *,
+        .stDownloadButton button *,
+        .stFormSubmitButton button * {{
+            color: inherit !important;
+        }}
+        [data-testid="stButton"] button:hover,
+        [data-testid="stDownloadButton"] button:hover,
+        [data-testid="stFormSubmitButton"] button:hover,
+        .stButton button:hover,
+        .stDownloadButton button:hover,
+        .stFormSubmitButton button:hover {{
+            border-color: var(--aa-border-strong) !important;
+            background: var(--aa-surface-elev) !important;
             transform: translateY(-1px);
         }}
-        .stButton > button[kind="primary"],
-        .stFormSubmitButton > button[kind="primary"] {{
-            background: linear-gradient(135deg, var(--aa-primary), var(--aa-primary-strong));
-            color: #ffffff;
-            border-color: transparent;
+        [data-testid="stButton"] button[kind="primary"],
+        [data-testid="stFormSubmitButton"] button[kind="primary"],
+        .stButton button[kind="primary"],
+        .stFormSubmitButton button[kind="primary"] {{
+            background: linear-gradient(135deg, var(--aa-primary), var(--aa-primary-strong)) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
             box-shadow: 0 6px 18px var(--aa-primary-glow);
         }}
-        .stButton > button[kind="primary"]:hover,
-        .stFormSubmitButton > button[kind="primary"]:hover {{
+        [data-testid="stButton"] button[kind="primary"]:hover,
+        [data-testid="stFormSubmitButton"] button[kind="primary"]:hover,
+        .stButton button[kind="primary"]:hover,
+        .stFormSubmitButton button[kind="primary"]:hover {{
             filter: brightness(1.05);
             box-shadow: 0 10px 26px var(--aa-primary-glow);
         }}
@@ -705,6 +737,20 @@ def apply_theme(theme: dict | None = None) -> None:
             margin-bottom: 14px;
             box-shadow: var(--aa-shadow-sm);
         }}
+        .act-topbar-title {{
+            align-items: center;
+            background: var(--aa-surface);
+            border: 1px solid var(--aa-border);
+            border-radius: var(--aa-radius);
+            box-shadow: var(--aa-shadow-sm);
+            color: var(--aa-text-strong);
+            display: flex;
+            font-size: 14px;
+            font-weight: 600;
+            gap: 10px;
+            padding: 10px 16px;
+        }}
+        .act-topbar-title .dot {{ color: var(--aa-primary-strong); }}
         .act-top-title {{
             display:flex; align-items:center; gap: 10px;
             color: var(--aa-text-strong); font-weight: 600; font-size: 14px;
@@ -718,6 +764,25 @@ def apply_theme(theme: dict | None = None) -> None:
             font-size: 12px;
             padding: 5px 11px;
             background: var(--aa-surface-elev);
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 120ms ease, color 120ms ease,
+                        border-color 120ms ease;
+            user-select: none;
+        }}
+        a.act-mini-button:link,
+        a.act-mini-button:visited {{
+            color: var(--aa-muted-text);
+            text-decoration: none;
+        }}
+        a.act-mini-button:hover {{
+            background: var(--aa-primary-soft);
+            color: var(--aa-primary-strong);
+            border-color: var(--aa-primary-soft);
+            text-decoration: none;
+        }}
+        a.act-mini-button:active {{
+            transform: translateY(0.5px);
         }}
         .act-status-pill {{
             display:inline-flex; align-items:center; gap: 6px;
@@ -1347,6 +1412,100 @@ def apply_theme(theme: dict | None = None) -> None:
         }}
         [data-testid="stAlert"] * {{ color: var(--aa-text) !important; }}
 
+        /* ============================================================
+           Dialogs / modals
+           Streamlit renders @st.dialog content in a portal that is NOT
+           inside .stApp, so the .stApp / block-container background rules
+           never reach it. Scope to Streamlit's dialog wrapper and its inner
+           role="dialog" child; broad global modal selectors also match
+           popovers / dropdowns and would clobber unrelated UI.
+           ============================================================ */
+        [data-testid="stDialog"],
+        .stDialog,
+        [data-testid="stDialog"] [role="dialog"],
+        .stDialog [role="dialog"] {{
+            background: var(--aa-surface) !important;
+            color: var(--aa-text) !important;
+            border: 1px solid var(--aa-border) !important;
+            border-radius: var(--aa-radius-lg) !important;
+            box-shadow: var(--aa-shadow-lg) !important;
+        }}
+        [data-testid="stDialog"] h1,
+        [data-testid="stDialog"] h2,
+        [data-testid="stDialog"] h3,
+        [data-testid="stDialog"] h4,
+        [data-testid="stDialog"] h5 {{
+            color: var(--aa-text-strong) !important;
+        }}
+        [data-testid="stDialog"] [data-testid="stMarkdownContainer"],
+        [data-testid="stDialog"] [data-testid="stMarkdownContainer"] *,
+        [data-testid="stDialog"] [data-testid="stCaptionContainer"],
+        [data-testid="stDialog"] [data-testid="stCaptionContainer"] *,
+        [data-testid="stDialog"] p,
+        [data-testid="stDialog"] li,
+        [data-testid="stDialog"] td,
+        [data-testid="stDialog"] th,
+        .stDialog [data-testid="stMarkdownContainer"],
+        .stDialog [data-testid="stMarkdownContainer"] *,
+        .stDialog [data-testid="stCaptionContainer"],
+        .stDialog [data-testid="stCaptionContainer"] *,
+        .stDialog p,
+        .stDialog li,
+        .stDialog td,
+        .stDialog th {{
+            color: var(--aa-text) !important;
+        }}
+        [data-testid="stDialog"] a,
+        .stDialog a {{
+            color: var(--aa-primary-strong) !important;
+        }}
+        [data-testid="stDialog"] code,
+        .stDialog code {{
+            background: var(--aa-surface-muted) !important;
+            color: var(--aa-success) !important;
+            border: 1px solid var(--aa-border) !important;
+            border-radius: 5px !important;
+        }}
+        [data-testid="stDialog"] input,
+        .stDialog input {{
+            background: var(--aa-surface) !important;
+            color: var(--aa-text) !important;
+            border-color: var(--aa-border) !important;
+        }}
+        [data-testid="stDialog"] [data-testid="stPopoverButton"],
+        .stDialog [data-testid="stPopoverButton"] {{
+            background: var(--aa-surface) !important;
+            color: var(--aa-text) !important;
+            border: 1px solid var(--aa-border) !important;
+        }}
+        [data-testid="stDialog"] [data-testid="stPopoverButton"] *,
+        .stDialog [data-testid="stPopoverButton"] * {{
+            color: inherit !important;
+        }}
+        [data-testid="stDialog"] [data-testid="stExpander"] {{
+            background: var(--aa-surface-elev) !important;
+            color: var(--aa-text) !important;
+            border: 1px solid var(--aa-border) !important;
+            border-radius: var(--aa-radius) !important;
+        }}
+        .stDialog [data-testid="stExpander"] {{
+            background: var(--aa-surface-elev) !important;
+            color: var(--aa-text) !important;
+            border: 1px solid var(--aa-border) !important;
+            border-radius: var(--aa-radius) !important;
+        }}
+        [data-testid="stDialog"] [data-testid="stExpander"] summary,
+        [data-testid="stDialog"] [data-testid="stExpander"] summary p,
+        .stDialog [data-testid="stExpander"] summary,
+        .stDialog [data-testid="stExpander"] summary p {{
+            background: transparent !important;
+            color: var(--aa-text) !important;
+        }}
+        [data-testid="stDialog"] button[aria-label="Close"],
+        .stDialog button[aria-label="Close"] {{
+            color: var(--aa-text) !important;
+        }}
+
         /* Tighter responsive */
         @media (max-width: 960px) {{
             .act-stepper {{ grid-template-columns: repeat(3, 1fr); }}
@@ -1402,7 +1561,7 @@ def apply_theme(theme: dict | None = None) -> None:
         }}
         </style>
     """)
-    st.html(_css)
+    st.markdown(_css, unsafe_allow_html=True)
     _inject_sidebar_reopen_button()
 
 

@@ -290,30 +290,37 @@ verdict / confidence updates live.
 
 
 def upload_topbar():
-    st.html(
-        """
-        <div class="act-topbar">
-          <div class="act-top-title">
-            <span style="color:var(--aa-primary-strong)">●</span>
-            <span>New case session</span>
-          </div>
-          <div class="act-top-actions">
-            <span class="act-mini-button">📚 AI Act corpus</span>
-            <span class="act-mini-button">❓ Guide</span>
-          </div>
-        </div>
-        """
+    # Use real Streamlit buttons (not <a href="?dlg=..."> anchors) so opening a
+    # dialog doesn't trigger a full browser navigation. The anchor version
+    # reset session_state on click, which silently dropped the user's
+    # light/dark mode preference back to the default (Courtroom Noir / dark).
+    c_title, c_corpus, c_guide = st.columns(
+        [5, 1.5, 1], vertical_alignment="center"
     )
-    # Real click targets rendered immediately below the styled bar.
-    # Kept minimal — the dialogs themselves carry the brand styling.
-    _, c1, c2 = st.columns([6, 1.4, 1.0])
-    with c1:
-        if st.button("Open AI Act corpus", key="topbar_corpus_btn",
-                     use_container_width=True):
+    with c_title:
+        st.html(
+            """
+            <div class="act-topbar-title">
+              <span class="dot">●</span>
+              <span>New case session</span>
+            </div>
+            """
+        )
+    with c_corpus:
+        if st.button(
+            "📚 AI Act corpus",
+            key="open_corpus_btn",
+            use_container_width=True,
+            help="Browse the 29 curated AI Act references the Legal Clerk cites.",
+        ):
             _corpus_dialog()
-    with c2:
-        if st.button("Open Guide", key="topbar_guide_btn",
-                     use_container_width=True):
+    with c_guide:
+        if st.button(
+            "❓ Guide",
+            key="open_guide_btn",
+            use_container_width=True,
+            help="How to use OBJECTION! AI ACT.",
+        ):
             _guide_dialog()
 
 
