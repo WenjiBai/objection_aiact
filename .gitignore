@@ -97,3 +97,6 @@ tmp/
 temp/
 *.tmp
 ppt/
+
+.claude/
+.agents/
