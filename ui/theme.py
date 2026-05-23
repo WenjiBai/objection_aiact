@@ -11,6 +11,7 @@ import textwrap
 from copy import deepcopy
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 THEME_STATE_KEY = "ui_theme_tokens"
@@ -1403,18 +1404,53 @@ def apply_theme(theme: dict | None = None) -> None:
         </style>
     """)
     st.html(_css)
-    # JS: render a floating button when the sidebar is collapsed. Clicking it
-    # tries every known Streamlit selector for "expand sidebar". Robust against
-    # data-testid changes and persisted localStorage collapsed state.
-    st.html(
+    _inject_sidebar_reopen_button()
+
+
+def _inject_sidebar_reopen_button() -> None:
+    """Inject a floating ☰ button into the parent document that re-opens the
+    sidebar. Uses components.v1.html (iframe, scripts execute) instead of
+    st.html (no script execution). Robust against Streamlit DOM/test-id
+    changes and persisted localStorage collapsed state."""
+    components.html(
         """
-        <div id="act-reopen-sidebar" title="Show sidebar">&#9776;</div>
         <script>
         (function () {
-          const btn = window.parent.document.getElementById('act-reopen-sidebar')
-                    || document.getElementById('act-reopen-sidebar');
-          if (!btn) return;
-          const doc = window.parent.document || document;
+          const doc = window.parent.document;
+          if (!doc) return;
+
+          // Idempotent: if a previous render already injected the button, reuse it.
+          let btn = doc.getElementById('act-reopen-sidebar');
+          if (!btn) {
+            btn = doc.createElement('div');
+            btn.id = 'act-reopen-sidebar';
+            btn.title = 'Show sidebar';
+            btn.innerHTML = '&#9776;';
+            // Styling lives in apply_theme()'s CSS so the button picks up
+            // the active theme (light/dark) automatically — we only set the
+            // initial `display` inline so it's hidden until JS confirms the
+            // sidebar is actually collapsed.
+            btn.style.display = 'none';
+            doc.body.appendChild(btn);
+
+            btn.addEventListener('click', function () {
+              const selectors = [
+                '[data-testid="stSidebarCollapsedControl"] button',
+                '[data-testid="stSidebarCollapsedControl"]',
+                '[data-testid="collapsedControl"] button',
+                '[data-testid="collapsedControl"]',
+                '[data-testid="stSidebarCollapseButton"] button',
+                '[data-testid="stSidebarCollapseButton"]',
+              ];
+              for (const s of selectors) {
+                const el = doc.querySelector(s);
+                if (el) { el.click(); return; }
+              }
+              // Final fallback: clear persisted collapsed state and reload.
+              try { window.parent.localStorage.clear(); } catch (e) {}
+              window.parent.location.reload();
+            });
+          }
 
           function sidebarCollapsed() {
             const sb = doc.querySelector('[data-testid="stSidebar"]');
@@ -1425,36 +1461,17 @@ def apply_theme(theme: dict | None = None) -> None:
             return r.width < 20 || r.right <= 0;
           }
 
-          function tryOpen() {
-            const selectors = [
-              '[data-testid="stSidebarCollapsedControl"] button',
-              '[data-testid="stSidebarCollapsedControl"]',
-              '[data-testid="collapsedControl"] button',
-              '[data-testid="collapsedControl"]',
-              '[data-testid="stSidebarCollapseButton"] button',
-              '[data-testid="stSidebarCollapseButton"]',
-              'button[kind="header"]',
-            ];
-            for (const s of selectors) {
-              const el = doc.querySelector(s);
-              if (el) { el.click(); return true; }
-            }
-            // Last resort: clear persisted collapsed state and reload.
-            try { window.parent.localStorage.clear(); } catch (e) {}
-            window.parent.location.reload();
-            return false;
-          }
-
-          btn.addEventListener('click', tryOpen);
-
           function refresh() {
             btn.style.display = sidebarCollapsed() ? 'flex' : 'none';
           }
           refresh();
-          setInterval(refresh, 400);
+          if (!window.parent.__actReopenInterval) {
+            window.parent.__actReopenInterval = setInterval(refresh, 400);
+          }
         })();
         </script>
-        """
+        """,
+        height=0,
     )
 
 
