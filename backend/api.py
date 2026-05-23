@@ -1,44 +1,34 @@
-"""Backend entry points — STUB until Person A wires the real agents.
+"""Backend contract surface — the ONLY module the frontend imports from `backend`.
 
-Contract (Frontend_Backend_Sync_v1.md §3 / CaseFile_Schema_Spec.md §"Backend 入口约定"):
-- Both functions are synchronous.
-- run_courtroom: NEW → VERDICT_READY (or ERROR).
-- handle_chat: appends user turn + judge turn; may update verdict, facts, rules.
-- On second schema-validation failure, raise BackendValidationError; frontend rolls back.
+Spec: Backend_Architecture_v1.md §4 / Frontend_Backend_Sync_v1.md §3.
+
+`run_courtroom` and `handle_chat` are synchronous, max latency 30 s, and may
+raise `BackendValidationError`. All workflow logic lives in `Orchestrator`;
+this file stays a thin adapter that validates pre-conditions and forwards.
 """
-
 from __future__ import annotations
 
 from pydantic import ValidationError
 
 from backend.exceptions import BackendValidationError  # re-exported for B
-from shared.mock import make_mock_case_a, make_mock_case_b, simulate_chat_response
+from backend.orchestrator import Orchestrator
 from shared.schema import CaseFile, CaseStatus
 
+# Module-level singleton — Orchestrator.__init__ parses rules.yaml once.
+_orchestrator = Orchestrator()
 
-# --------------------------------------------------------------- entries
 
 def run_courtroom(case: CaseFile) -> CaseFile:
-    """Full pipeline. STUB — routes to a mock CaseFile based on doc content.
+    """Full 6-agent pipeline.
 
-    Person A's real implementation will run the 6-agent graph.
+    Pre:  case.status == NEW, case.documents non-empty.
+    Post: case.status in {VERDICT_READY, ERROR}; agent_activity has 6 entries;
+          every Objection.resolution is non-None.
+
+    Raises:
+        BackendValidationError: agent output failed schema validation twice.
     """
-    blob = " ".join(d.content for d in case.documents).lower()
-    hr_signal = any(k in blob for k in ("cv", "applicant", "hiring", "screen", "rank", "hr "))
-    forecast_signal = any(k in blob for k in ("forecast", "inventory", "stock", "logistics"))
-
-    if forecast_signal and not hr_signal:
-        result = make_mock_case_b()
-    else:
-        result = make_mock_case_a()  # default to the killer demo
-
-    # Preserve the user-supplied identity and uploaded docs.
-    if case.case_id:
-        result.case_id = case.case_id
-    if case.documents:
-        result.documents = case.documents
-    result.status = CaseStatus.VERDICT_READY
-
+    result = _orchestrator.run_courtroom(case)
     try:
         return CaseFile.model_validate(result.model_dump())
     except ValidationError as e:
@@ -46,15 +36,20 @@ def run_courtroom(case: CaseFile) -> CaseFile:
 
 
 def handle_chat(case: CaseFile, user_text: str) -> CaseFile:
-    """One cross-exam turn. STUB — delegates to simulate_chat_response()."""
+    """One cross-examination turn.
+
+    Pre:  case.status == VERDICT_READY (or RE_EXAMINING).
+    Post: case.chat_history appended with user + judge turns; may add facts,
+          re-fire rules, update verdict, shrink missing_evidence.
+    """
     if case.status not in (CaseStatus.VERDICT_READY, CaseStatus.RE_EXAMINING):
         raise BackendValidationError(
             agent="handle_chat",
             errors=f"case.status must be verdict_ready, got {case.status.value}",
         )
-    updated = simulate_chat_response(case, user_text)
+    result = _orchestrator.handle_chat(case, user_text)
     try:
-        return CaseFile.model_validate(updated.model_dump())
+        return CaseFile.model_validate(result.model_dump())
     except ValidationError as e:
         raise BackendValidationError(agent="handle_chat", errors=e.errors())
 
