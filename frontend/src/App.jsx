@@ -15,7 +15,67 @@ import {
   ChatSection,
 } from "./components.jsx";
 import { AI_ACT_CORPUS } from "./corpusData.js";
-import { makeCaseA, makeCaseB, simulateChat } from "./mock.js";
+import { makeCaseA, makeCaseB } from "./mock.js";
+
+const fileToBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      resolve(result.includes(",") ? result.split(",")[1] : result);
+    };
+    reader.onerror = () => reject(reader.error || new Error(`Could not read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+
+async function postJson(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || `Request failed with ${response.status}`);
+  }
+  return data;
+}
+
+async function postBlob(url, payload) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.error || `Request failed with ${response.status}`);
+  }
+  return {
+    blob: await response.blob(),
+    contentDisposition: response.headers.get("Content-Disposition") || "",
+  };
+}
+
+function filenameFromContentDisposition(value) {
+  const encodedMatch = value.match(/filename\*=UTF-8''([^;]+)/i);
+  if (encodedMatch) {
+    return decodeURIComponent(encodedMatch[1]);
+  }
+  const match = value.match(/filename="([^"]+)"/i) || value.match(/filename=([^;]+)/i);
+  return match ? match[1].trim() : "objection_verdict.pdf";
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 function CorpusDialog({ onClose }) {
   const [query, setQuery] = React.useState("");
@@ -95,49 +155,58 @@ export default function App() {
   const [mode, setMode] = React.useState("dark");
   const [caseFile, setCaseFile] = React.useState(null);
   const [errorToast, setErrorToast] = React.useState(null);
+  const [isRunning, setIsRunning] = React.useState(false);
+  const [isChatting, setIsChatting] = React.useState(false);
+  const [isExporting, setIsExporting] = React.useState(false);
   const [modal, setModal] = React.useState(null);
 
   React.useEffect(() => {
     document.documentElement.dataset.theme = mode;
   }, [mode]);
 
-  const buildNewCaseFromUploads = (files, pasted) => {
-    // The Python backend builds a CaseFile then runs the courtroom. The React
-    // demo can't run the LLM pipeline, so we fall back to Case A's mock so the
-    // workspace still renders meaningfully when the user clicks "Open hearing".
-    // (Real wiring would POST to a FastAPI endpoint here.)
-    const mock = makeCaseA();
-    if (files.length || pasted.trim()) {
-      mock.documents = [
-        ...files.map((f, i) => ({
-          doc_id: `doc_${(i + 1).toString().padStart(2, "0")}`,
-          filename: f.name,
-          mime_type: f.type || "text/plain",
-          content: "",
-        })),
-        ...(pasted.trim()
-          ? [{
-              doc_id: `doc_${(files.length + 1).toString().padStart(2, "0")}`,
-              filename: "pasted_use_case.md",
-              mime_type: "text/markdown",
-              content: pasted.trim(),
-            }]
-          : []),
-      ];
-    }
-    return mock;
-  };
-
-  const handleRun = (files, pasted) => {
+  const handleRun = async (files, pasted) => {
+    setIsRunning(true);
+    setErrorToast(null);
     try {
-      setCaseFile(buildNewCaseFromUploads(files, pasted));
+      const encodedFiles = await Promise.all(
+        files.map(async (file) => ({
+          name: file.name,
+          type: file.type || "application/octet-stream",
+          data_base64: await fileToBase64(file),
+        }))
+      );
+      const data = await postJson("/api/run-courtroom", {
+        files: encodedFiles,
+        pasted_text: pasted,
+      });
+      setCaseFile(data.case_file);
+      if (data.warnings?.length) {
+        setErrorToast(data.warnings.join(" "));
+      }
     } catch (err) {
       setErrorToast(`Could not start the hearing: ${err.message}`);
+    } finally {
+      setIsRunning(false);
     }
   };
 
-  const handleChat = (text) => {
-    setCaseFile((cur) => (cur ? simulateChat(cur, text) : cur));
+  const handleChat = async (text) => {
+    if (!caseFile || isChatting) return;
+    const snapshot = caseFile;
+    setIsChatting(true);
+    setErrorToast(null);
+    try {
+      const data = await postJson("/api/chat", {
+        case_file: snapshot,
+        user_text: text,
+      });
+      setCaseFile(data.case_file);
+    } catch (err) {
+      setCaseFile(snapshot);
+      setErrorToast(`Could not cross-examine the verdict: ${err.message}`);
+    } finally {
+      setIsChatting(false);
+    }
   };
 
   const loadCase = (factory) => {
@@ -146,8 +215,20 @@ export default function App() {
     setModal(null);
   };
 
-  const handleExport = () => {
-    window.print();
+  const handleExport = async () => {
+    if (!caseFile || isExporting) return;
+    setIsExporting(true);
+    setErrorToast(null);
+    try {
+      const { blob, contentDisposition } = await postBlob("/api/export-pdf", {
+        case_file: caseFile,
+      });
+      downloadBlob(blob, filenameFromContentDisposition(contentDisposition));
+    } catch (err) {
+      setErrorToast(`PDF export failed: ${err.message}`);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -173,6 +254,7 @@ export default function App() {
             <LandingHero />
             <UploadPane
               onRun={handleRun}
+              isRunning={isRunning}
               onLoadA={() => loadCase(makeCaseA)}
               onLoadB={() => loadCase(makeCaseB)}
             />
@@ -181,8 +263,8 @@ export default function App() {
           <>
             <CaseFileSummary caseFile={caseFile} />
             <div style={{ display: "flex", justifyContent: "flex-end", margin: "0 0 8px" }}>
-              <button className="act-btn" onClick={handleExport}>
-                ⬇ Export Preliminary Verdict (PDF)
+              <button className="act-btn" onClick={handleExport} disabled={isExporting}>
+                {isExporting ? "Exporting PDF..." : "⬇ Export Preliminary Verdict (PDF)"}
               </button>
             </div>
             <AgentStepper caseFile={caseFile} />
@@ -192,7 +274,7 @@ export default function App() {
             <ObjectionsSection caseFile={caseFile} />
             <MissingAndGovernance caseFile={caseFile} />
             <AgentActivityTimeline caseFile={caseFile} />
-            <ChatSection caseFile={caseFile} onSubmit={handleChat} />
+            <ChatSection caseFile={caseFile} onSubmit={handleChat} disabled={isChatting} />
           </>
         )}
       </main>
@@ -233,7 +315,7 @@ export default function App() {
                 <span>2. Open a hearing to generate a preliminary risk verdict.</span>
                 <span>3. Inspect facts, legal references, assumptions, and fired rules.</span>
                 <span>4. Cross-examine the verdict with new facts or answers.</span>
-                <span>5. Export the current assessment through the browser print dialog.</span>
+                <span>5. Export the current assessment as a structured PDF report.</span>
               </div>
             </div>
           </div>

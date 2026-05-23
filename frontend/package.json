@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "api": "cd .. && python -m backend.http_api",
+    "serve": "npm run build && cd .. && python -m backend.http_api",
     "build": "vite build",
     "preview": "vite preview"
   },

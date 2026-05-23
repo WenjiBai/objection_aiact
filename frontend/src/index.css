@@ -206,6 +206,11 @@ button { font-family: inherit; }
 }
 .act-btn-row { display: flex; gap: 6px; }
 .act-btn-row > .act-btn { flex: 1; }
+.act-run-status {
+  color: var(--aa-muted-text);
+  font-size: 12px;
+  text-align: center;
+}
 
 /* ============================================================ inputs */
 .act-input,

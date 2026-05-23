@@ -123,7 +123,7 @@ export function UploadTopbar({ onOpenCorpus, onOpenGuide }) {
   );
 }
 
-export function UploadPane({ onRun, onLoadA, onLoadB }) {
+export function UploadPane({ onRun, isRunning = false, onLoadA, onLoadB }) {
   const [files, setFiles] = React.useState([]);
   const [pasted, setPasted] = React.useState("");
   const [drag, setDrag] = React.useState(false);
@@ -182,11 +182,12 @@ export function UploadPane({ onRun, onLoadA, onLoadB }) {
       <div style={{ height: 10 }} />
       <button
         className="act-btn primary"
-        disabled={!canRun}
+        disabled={!canRun || isRunning}
         onClick={() => onRun(files, pasted)}
       >
         ⚖ Open courtroom hearing
       </button>
+      {isRunning && <div className="act-run-status">Six agents are deliberating...</div>}
 
       <div className="act-quickstart">
         <span className="act-quickstart-chip">💡 Try a demo case →</span>
@@ -588,7 +589,7 @@ export function AgentActivityTimeline({ caseFile }) {
 }
 
 // ============================================================ Chat
-export function ChatSection({ caseFile, onSubmit }) {
+export function ChatSection({ caseFile, onSubmit, disabled = false }) {
   const [draft, setDraft] = React.useState("");
 
   return (
@@ -632,7 +633,7 @@ export function ChatSection({ caseFile, onSubmit }) {
         className="act-form"
         onSubmit={(e) => {
           e.preventDefault();
-          if (draft.trim()) {
+          if (draft.trim() && !disabled) {
             onSubmit(draft.trim());
             setDraft("");
           }
@@ -643,10 +644,11 @@ export function ChatSection({ caseFile, onSubmit }) {
           rows={3}
           placeholder="Answer a follow-up, add a fact, or challenge the verdict..."
           value={draft}
+          disabled={disabled}
           onChange={(e) => setDraft(e.target.value)}
         />
-        <button className="act-btn primary" type="submit">
-          Submit to judge
+        <button className="act-btn primary" type="submit" disabled={disabled}>
+          {disabled ? "Judge is reviewing..." : "Submit to judge"}
         </button>
       </form>
     </>
