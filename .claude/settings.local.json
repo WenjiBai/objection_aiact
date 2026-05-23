@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python *)"
+      "Bash(python *)",
+      "WebFetch(domain:eur-lex.europa.eu)",
+      "Bash(curl -sL 'https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R1689' -o /tmp/ai_act.html)",
+      "Read(//tmp/**)",
+      "Bash(python3 -c \"import bs4; print\\('bs4 OK', bs4.__version__\\)\")",
+      "Bash(pip install *)",
+      "WebFetch(domain:www.traficom.fi)",
+      "Bash(sed -n '275,293p' rag/corpus.py)",
+      "Bash(sed -n '814,824p' rag/corpus.py)"
     ]
   }
 }

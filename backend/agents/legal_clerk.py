@@ -22,8 +22,8 @@ from shared.schema import (
     EvidenceCategory, Reference,
 )
 
-_TOP_K_PER_QUERY = 4
-_MAX_TOTAL_REFS = 12
+_TOP_K_PER_QUERY = 5
+_MAX_TOTAL_REFS = 14
 
 
 class LegalClerkAgent(BaseAgent):
@@ -37,10 +37,16 @@ class LegalClerkAgent(BaseAgent):
         started_at = datetime.now()
         queries = self._derive_queries(case.facts)
 
+        # Dedup by code, but keep the BEST relevance_score across queries —
+        # a chunk retrieved by multiple queries should rank by its strongest hit,
+        # not by whichever query happened to fire first.
         seen: dict[str, Reference] = {}
         for q in queries:
             for ref in retrieve(q, top_k=_TOP_K_PER_QUERY):
-                if ref.code not in seen:
+                prior = seen.get(ref.code)
+                if prior is None or (
+                    (ref.relevance_score or 0) > (prior.relevance_score or 0)
+                ):
                     seen[ref.code] = ref
 
         ordered = sorted(
