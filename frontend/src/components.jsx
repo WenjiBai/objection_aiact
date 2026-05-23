@@ -103,7 +103,7 @@ export function LandingHero() {
       <div className="act-trust-row">
         <span className="act-trust-chip"><b>6</b> agents</span>
         <span className="act-trust-chip"><b>13</b> symbolic rules</span>
-        <span className="act-trust-chip"><b>29</b> AI Act references</span>
+        <span className="act-trust-chip"><b>68</b> AI Act references</span>
         <span className="act-trust-chip"><b>~12s</b> avg verdict</span>
       </div>
     </div>

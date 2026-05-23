@@ -14,7 +14,82 @@ import {
   AgentActivityTimeline,
   ChatSection,
 } from "./components.jsx";
+import { AI_ACT_CORPUS } from "./corpusData.js";
 import { makeCaseA, makeCaseB, simulateChat } from "./mock.js";
+
+function CorpusDialog({ onClose }) {
+  const [query, setQuery] = React.useState("");
+  const normalizedQuery = query.trim().toLowerCase();
+  const shown = React.useMemo(() => {
+    if (!normalizedQuery) return AI_ACT_CORPUS;
+    return AI_ACT_CORPUS.filter((ref) => {
+      const haystack = [
+        ref.code,
+        ref.article_no,
+        ref.title,
+        ref.snippet,
+        ref.full_text,
+        ref.source_label,
+        ref.source_type,
+      ].join(" ").toLowerCase();
+      return haystack.includes(normalizedQuery);
+    });
+  }, [normalizedQuery]);
+
+  return (
+    <div className="act-modal-backdrop" role="presentation" onClick={onClose}>
+      <div className="act-modal act-corpus-modal" role="dialog" aria-modal="true" aria-labelledby="corpus-title" onClick={(e) => e.stopPropagation()}>
+        <div className="act-modal-head">
+          <div>
+            <h2 id="corpus-title">AI Act corpus</h2>
+            <p>{AI_ACT_CORPUS.length} curated chunks from Regulation (EU) 2024/1689 and related guidance.</p>
+          </div>
+          <button className="act-icon-btn" type="button" aria-label="Close dialog" onClick={onClose}>x</button>
+        </div>
+        <div className="act-modal-body">
+          <input
+            className="act-input act-corpus-search"
+            type="search"
+            placeholder="article number, keyword, or R-code"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+          <div className="act-corpus-count">
+            Showing <b>{shown.length}</b> of {AI_ACT_CORPUS.length}
+          </div>
+          <div className="act-corpus-list">
+            {shown.length ? (
+              shown.map((ref) => (
+                <details className="act-corpus-item" key={ref.code}>
+                  <summary>
+                    <span className="act-code r">{ref.code}</span>
+                    <span className="title">{ref.title}</span>
+                  </summary>
+                  <div className="act-corpus-meta">
+                    Article {ref.article_no} · {ref.source_label} · {ref.source_type}
+                  </div>
+                  <p>{ref.snippet}</p>
+                  <details className="act-full-text">
+                    <summary>Full text</summary>
+                    <p>{ref.full_text}</p>
+                  </details>
+                  {ref.url && (
+                    <a className="act-source-link" href={ref.url} target="_blank" rel="noreferrer">
+                      Open source
+                    </a>
+                  )}
+                </details>
+              ))
+            ) : (
+              <div className="act-empty">No matching references.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [mode, setMode] = React.useState("dark");
@@ -143,27 +218,7 @@ export default function App() {
         </div>
       )}
 
-      {modal === "corpus" && (
-        <div className="act-modal-backdrop" role="presentation" onClick={() => setModal(null)}>
-          <div className="act-modal" role="dialog" aria-modal="true" aria-labelledby="corpus-title" onClick={(e) => e.stopPropagation()}>
-            <div className="act-modal-head">
-              <h2 id="corpus-title">AI Act corpus</h2>
-              <button className="act-icon-btn" type="button" aria-label="Close dialog" onClick={() => setModal(null)}>x</button>
-            </div>
-            <div className="act-modal-body">
-              <div className="act-ref-list">
-                <span>Annex III-4: Employment, worker management, and access to self-employment.</span>
-                <span>Article 6: Classification rules for high-risk AI systems.</span>
-                <span>Article 13: Transparency and instructions for use.</span>
-                <span>Article 14: Human oversight.</span>
-                <span>Article 27: Fundamental rights impact assessment.</span>
-                <span>Article 50: Transparency obligations for direct interaction systems.</span>
-                <span>Article 71: EU database registration for high-risk systems.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {modal === "corpus" && <CorpusDialog onClose={() => setModal(null)} />}
 
       {modal === "guide" && (
         <div className="act-modal-backdrop" role="presentation" onClick={() => setModal(null)}>
