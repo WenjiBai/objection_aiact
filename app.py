@@ -10,21 +10,23 @@ import uuid
 import streamlit as st
 
 from backend.api import BackendValidationError, handle_chat, run_courtroom
+from shared.document_parser import extract_text
 from shared.schema import CaseFile, CaseStatus, Document
 from shared.validators import snapshot, validate_codes
 from ui.components import (
     agent_activity_timeline,
+    agent_stepper,
     case_file_summary,
     chat_history,
     evidence_board,
+    landing_hero,
     missing_and_governance,
     objections_section,
     symbolic_rules_panel,
-    upload_hero,
     upload_topbar,
     verdict_card,
 )
-from ui.theme import apply_theme, init_theme_state
+from ui.theme import apply_theme, get_mode, init_theme_state, set_mode
 
 
 st.set_page_config(
@@ -52,20 +54,30 @@ _init_state()
 
 # ----------------------------------------------------------------- helpers
 
-def _build_new_case(uploaded_files, pasted_text: str = "") -> CaseFile:
+def _build_new_case(uploaded_files, pasted_text: str = "") -> tuple[CaseFile, list[str]]:
+    """Build a CaseFile from uploads + pasted text.
+
+    Returns (case_file, warnings). Warnings cover truncated or unparsable docs;
+    the caller surfaces them via st.warning so the demo never silently feeds
+    garbage to the LLM (the original UTF-8-decode bug that blew the rate limit).
+    """
     docs: list[Document] = []
+    warnings: list[str] = []
     for i, up in enumerate(uploaded_files, start=1):
-        try:
-            raw = up.read().decode("utf-8", errors="replace")
-        except Exception:
-            raw = f"[Binary document uploaded: {up.name}]"
+        parsed = extract_text(up)
+        if parsed.parser == "fallback":
+            warnings.append(f"Could not parse {up.name} — sent placeholder text to the courtroom.")
+        elif parsed.truncated:
+            warnings.append(
+                f"{up.name} was {parsed.original_chars:,} chars — truncated to 30,000 to stay under the LLM rate limit."
+            )
         mime = up.type or ("text/markdown" if up.name.endswith(".md") else "text/plain")
         docs.append(
             Document(
                 doc_id=f"doc_{i:02d}",
                 filename=up.name,
                 mime_type=mime,
-                content=raw,
+                content=parsed.text,
             )
         )
     if pasted_text.strip():
@@ -77,33 +89,61 @@ def _build_new_case(uploaded_files, pasted_text: str = "") -> CaseFile:
                 content=pasted_text.strip(),
             )
         )
-    return CaseFile(
+    case = CaseFile(
         case_id=f"case_{uuid.uuid4().hex[:8]}",
         status=CaseStatus.NEW,
         documents=docs,
     )
+    return case, warnings
 
 
 # ---------------------------------------------------------------- sidebar
 
 with st.sidebar:
-    st.markdown(
+    st.html(
         """
         <div class="act-brand">
           <span class="mark">⚖</span>
-          <span class="name">ActScout</span>
-          <span class="tag">hybrid</span>
+          <div class="act-brand-stack">
+            <span class="name">OBJECTION!</span>
+            <span class="tag">AI ACT</span>
+          </div>
         </div>
-        """,
-        unsafe_allow_html=True,
+        <div class="act-brand-sub">Puts your AI use case on trial.</div>
+        """
     )
-    if st.button("＋ New case", use_container_width=True):
+
+    # Theme mode toggle
+    mode = get_mode()
+    tcol1, tcol2 = st.columns(2)
+    with tcol1:
+        if st.button(
+            "🌙 Dark",
+            use_container_width=True,
+            type="primary" if mode == "dark" else "secondary",
+            key="mode_dark",
+        ):
+            set_mode("dark")
+            st.rerun()
+    with tcol2:
+        if st.button(
+            "☀ Light",
+            use_container_width=True,
+            type="primary" if mode == "light" else "secondary",
+            key="mode_light",
+        ):
+            set_mode("light")
+            st.rerun()
+
+    st.html("<div style='height:6px'></div>")
+
+    if st.button("+ New case", use_container_width=True, type="primary"):
         st.session_state.case_file = None
         st.session_state.error_toast = None
         st.rerun()
-    st.button("⌕ Search cases", use_container_width=True, disabled=True)
+    st.button("Search cases", use_container_width=True, disabled=True)
 
-    st.markdown('<div class="act-side-section">Recent cases</div>', unsafe_allow_html=True)
+    st.html('<div class="act-side-section">Demo cases</div>')
     if st.button("● AI hiring screener", use_container_width=True):
         from shared.mock import make_mock_case_a
         st.session_state.case_file = make_mock_case_a()
@@ -112,14 +152,16 @@ with st.sidebar:
         from shared.mock import make_mock_case_b
         st.session_state.case_file = make_mock_case_b()
         st.rerun()
-    st.markdown(
+
+    st.html(
         """
-        <div class="act-case-link"><span class="act-dot" style="background:#BA7517"></span> Customer chatbot (draft)</div>
-        <div class="act-case-link"><span class="act-dot" style="background:#0F6E56"></span> Email spam filter</div>
-        <div class="act-side-section">Settings</div>
-        <div class="act-side-link">⚙ Preferences</div>
-        """,
-        unsafe_allow_html=True,
+        <div class="act-side-section">Recent (draft)</div>
+        <div class="act-case-link"><span class="act-dot" style="background:#F59E0B"></span> Customer chatbot</div>
+        <div class="act-case-link"><span class="act-dot" style="background:#10B981"></span> Email spam filter</div>
+        <div class="act-side-section">Workspace</div>
+        <div class="act-case-link">⚙ Preferences</div>
+        <div class="act-case-link">📚 AI Act corpus</div>
+        """
     )
 
 
@@ -131,53 +173,109 @@ if st.session_state.error_toast:
 
 case: CaseFile | None = st.session_state.case_file
 
+# ============================================================== landing
 if case is None:
     upload_topbar()
-    upload_hero()
+    landing_hero()
+
     center = st.columns([1, 1.6, 1])[1]
     with center:
         uploaded = st.file_uploader(
             "Documents",
-            type=["pdf", "docx", "txt", "md"],
+            type=["pdf", "docx", "pptx", "txt", "md"],
             accept_multiple_files=True,
             key="uploader",
             label_visibility="collapsed",
+            help="Vendor white papers, model cards, policy docs, internal process notes",
         )
-        st.markdown('<div class="act-or"><span>or</span></div>', unsafe_allow_html=True)
+        st.html('<div class="act-or"><span>or paste use-case description</span></div>')
         pasted = st.text_area(
             "Paste use-case description",
-            placeholder="Paste a use-case description here...",
-            height=92,
+            placeholder="e.g. We're building an AI tool that ranks job applicants...",
+            height=110,
             label_visibility="collapsed",
         )
         can_run = bool(uploaded) or bool(pasted.strip())
-        if st.button("⚖ Open courtroom hearing", type="primary", use_container_width=True, disabled=not can_run):
-            case = _build_new_case(uploaded, pasted)
-            with st.spinner("Six agents are deliberating..."):
+        if st.button(
+            "⚖ Open courtroom hearing",
+            type="primary",
+            use_container_width=True,
+            disabled=not can_run,
+        ):
+            new_case, parse_warnings = _build_new_case(uploaded, pasted)
+            for w in parse_warnings:
+                st.warning(w)
+            with st.spinner("Six agents are deliberating…"):
                 try:
-                    st.session_state.case_file = run_courtroom(case)
+                    st.session_state.case_file = run_courtroom(new_case)
                 except BackendValidationError as e:
                     st.session_state.error_toast = f"Backend failed: {e}"
+                except Exception as e:
+                    # anthropic.RateLimitError surfaces as a 429; catch by name so
+                    # we don't hard-depend on the anthropic package at import time.
+                    if type(e).__name__ == "RateLimitError" or "rate_limit" in str(e).lower() or "429" in str(e):
+                        st.session_state.error_toast = (
+                            "Rate limit hit — wait ~1 minute and try again, "
+                            "or upload fewer / smaller documents."
+                        )
+                    else:
+                        raise
             st.rerun()
+
+        st.html(
+            """
+            <div class="act-quickstart">
+              <span class="act-quickstart-chip">💡 Try a demo case →</span>
+            </div>
+            """
+        )
+        qc1, qc2 = st.columns(2)
+        with qc1:
+            if st.button("👤 AI hiring screener", use_container_width=True):
+                from shared.mock import make_mock_case_a
+                st.session_state.case_file = make_mock_case_a()
+                st.rerun()
+        with qc2:
+            if st.button("📦 Inventory forecaster", use_container_width=True):
+                from shared.mock import make_mock_case_b
+                st.session_state.case_file = make_mock_case_b()
+                st.rerun()
+
+# ============================================================== workspace
 else:
     case_file_summary(case)
-    verdict_card(case)
-    evidence_board(case)
-    symbolic_rules_panel(case)
-    objections_section(case)
-    missing_and_governance(case)
-    agent_activity_timeline(case)
+    agent_stepper(case)
 
-    # --- Cross-exam chat -----------------------------------------------
-    st.markdown('<div class="act-chat-wrap">', unsafe_allow_html=True)
-    st.markdown("#### Cross-examine the verdict")
-    if case.follow_up_questions:
-        with st.expander("Suggested follow-up questions", expanded=False):
-            for q in case.follow_up_questions:
-                st.markdown(f"- {q}")
+    left, right = st.columns([1.55, 1], gap="large")
 
-    chat_history(case)
-    st.markdown("</div>", unsafe_allow_html=True)
+    with left:
+        verdict_card(case)
+        evidence_board(case)
+        symbolic_rules_panel(case)
+        objections_section(case)
+        missing_and_governance(case)
+        agent_activity_timeline(case)
+
+    with right:
+        st.html('<div class="act-chat-wrap">')
+        st.html(
+            """
+            <div class="act-chat-head">
+              <div class="act-chat-title">⚖ Cross-examine the verdict</div>
+              <span class="act-chat-hint">Add a fact · challenge a claim · answer a follow-up</span>
+            </div>
+            """
+        )
+        if case.follow_up_questions:
+            chips = "".join(
+                f'<span class="act-followup-chip">❓ {q[:80]}{"…" if len(q) > 80 else ""}</span>'
+                for q in case.follow_up_questions[:4]
+            )
+            st.html(
+                f'<div style="margin-bottom:10px;">{chips}</div>'
+            )
+        chat_history(case)
+        st.html("</div>")
 
     user_text = st.chat_input("Answer a follow-up, add a fact, or challenge the verdict…")
     if user_text:
