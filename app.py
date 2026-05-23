@@ -11,6 +11,7 @@ import streamlit as st
 
 from backend.api import BackendValidationError, handle_chat, run_courtroom
 from shared.document_parser import extract_text
+from shared.pdf_export import case_pdf_filename, case_to_pdf_bytes
 from shared.schema import CaseFile, CaseStatus, Document
 from shared.validators import snapshot, validate_codes
 from ui.components import (
@@ -235,6 +236,24 @@ if case is None:
 # ============================================================== workspace
 else:
     case_file_summary(case)
+
+    # Export Preliminary Verdict as PDF (button sits just under the case banner).
+    pdf_col = st.columns([1, 1, 1])[2]
+    with pdf_col:
+        try:
+            pdf_bytes = case_to_pdf_bytes(case)
+            st.download_button(
+                label="⬇ Export Preliminary Verdict (PDF)",
+                data=pdf_bytes,
+                file_name=case_pdf_filename(case),
+                mime="application/pdf",
+                use_container_width=True,
+                key=f"pdf_dl_{case.case_id}",
+                help="Download the full case file: verdict, evidence, rule trace, objections, and checklist.",
+            )
+        except Exception as e:
+            st.error(f"PDF export failed: {type(e).__name__}: {e}")
+
     agent_stepper(case)
 
     verdict_card(case)

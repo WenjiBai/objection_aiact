@@ -256,7 +256,6 @@ def case_file_summary(case: CaseFile):
               <span class="dot" style="background:{tier_color};box-shadow:0 0 12px {tier_color};"></span>
               {_h(tier_label)}
             </span>
-            <span class="act-mini-button">{ICON_DOWNLOAD} Export PDF</span>
           </div>
         </div>
         """

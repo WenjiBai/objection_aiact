@@ -16,5 +16,8 @@ pypdf>=4.0
 python-docx>=1.1
 python-pptx>=0.6
 
+# PDF export (Preliminary Verdict)
+reportlab>=4.0
+
 # Dev
 pytest>=8.0
