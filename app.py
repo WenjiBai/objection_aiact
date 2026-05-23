@@ -153,16 +153,7 @@ with st.sidebar:
         st.session_state.case_file = make_mock_case_b()
         st.rerun()
 
-    st.html(
-        """
-        <div class="act-side-section">Recent (draft)</div>
-        <div class="act-case-link"><span class="act-dot" style="background:#F59E0B"></span> Customer chatbot</div>
-        <div class="act-case-link"><span class="act-dot" style="background:#10B981"></span> Email spam filter</div>
-        <div class="act-side-section">Workspace</div>
-        <div class="act-case-link">⚙ Preferences</div>
-        <div class="act-case-link">📚 AI Act corpus</div>
-        """
-    )
+
 
 
 # --------------------------------------------------------------- main pane
@@ -246,50 +237,46 @@ else:
     case_file_summary(case)
     agent_stepper(case)
 
-    left, right = st.columns([1.55, 1], gap="large")
-
-    with left:
-        verdict_card(case)
-        evidence_board(case)
-        symbolic_rules_panel(case)
-        objections_section(case)
-        missing_and_governance(case)
-        agent_activity_timeline(case)
+    verdict_card(case)
+    evidence_board(case)
+    symbolic_rules_panel(case)
+    objections_section(case)
+    missing_and_governance(case)
+    agent_activity_timeline(case)
 
     user_text = None
 
-    with right:
-        st.html(
-            """
-            <div class="act-chat-head">
-              <div class="act-chat-title">⚖ Cross-examine the verdict</div>
-              <span class="act-chat-hint">Add a fact · challenge a claim · answer a follow-up</span>
-            </div>
-            """
+    st.html(
+        """
+        <div class="act-chat-head">
+          <div class="act-chat-title">⚖ Cross-examine the verdict</div>
+          <span class="act-chat-hint">Add a fact · challenge a claim · answer a follow-up</span>
+        </div>
+        """
+    )
+    if case.follow_up_questions:
+        chips = "".join(
+            f'<span class="act-followup-chip">❓ {q[:80]}{"…" if len(q) > 80 else ""}</span>'
+            for q in case.follow_up_questions[:4]
         )
-        if case.follow_up_questions:
-            chips = "".join(
-                f'<span class="act-followup-chip">❓ {q[:80]}{"…" if len(q) > 80 else ""}</span>'
-                for q in case.follow_up_questions[:4]
-            )
-            st.html(
-                f'<div style="margin-bottom:10px;">{chips}</div>'
-            )
-        chat_history(case)
-        with st.form("cross_exam_form", clear_on_submit=True, border=False):
-            typed = st.text_area(
-                "Cross-examination input",
-                placeholder="Answer a follow-up, add a fact, or challenge the verdict...",
-                height=92,
-                label_visibility="collapsed",
-            )
-            submitted = st.form_submit_button(
-                "Submit to judge",
-                type="primary",
-                use_container_width=True,
-            )
-            if submitted and typed.strip():
-                st.session_state.cross_exam_pending = typed.strip()
+        st.html(
+            f'<div style="margin-bottom:10px;">{chips}</div>'
+        )
+    chat_history(case)
+    with st.form("cross_exam_form", clear_on_submit=True, border=False):
+        typed = st.text_area(
+            "Cross-examination input",
+            placeholder="Answer a follow-up, add a fact, or challenge the verdict...",
+            height=92,
+            label_visibility="collapsed",
+        )
+        submitted = st.form_submit_button(
+            "Submit to judge",
+            type="primary",
+            use_container_width=True,
+        )
+        if submitted and typed.strip():
+            st.session_state.cross_exam_pending = typed.strip()
 
     user_text = st.chat_input("Answer a follow-up, add a fact, or challenge the verdict…")
     if not user_text:

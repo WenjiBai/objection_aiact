@@ -11,7 +11,6 @@ import textwrap
 from copy import deepcopy
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 THEME_STATE_KEY = "ui_theme_tokens"
@@ -1409,10 +1408,10 @@ def apply_theme(theme: dict | None = None) -> None:
 
 def _inject_sidebar_reopen_button() -> None:
     """Inject a floating ☰ button into the parent document that re-opens the
-    sidebar. Uses components.v1.html (iframe, scripts execute) instead of
-    st.html (no script execution). Robust against Streamlit DOM/test-id
-    changes and persisted localStorage collapsed state."""
-    components.html(
+    sidebar. Uses st.html with unsafe_allow_javascript=True so the script
+    actually runs (plain st.html ignores <script>). Robust against Streamlit
+    DOM/test-id changes and persisted localStorage collapsed state."""
+    st.html(
         """
         <script>
         (function () {
@@ -1471,7 +1470,7 @@ def _inject_sidebar_reopen_button() -> None:
         })();
         </script>
         """,
-        height=0,
+        unsafe_allow_javascript=True,
     )
 
 
