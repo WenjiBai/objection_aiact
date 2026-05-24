@@ -1,8 +1,11 @@
 # OBJECTION! AI ACT — developer guide
 
-Track 3 submission for the Norrin Hackathon, deadline **2026-05-24 11:00**.
+**OBJECTION! AI ACT** is an evidence-based multi-agent system that puts an AI use case on trial under the EU AI Act. Users upload AI system documentation, and six specialized agents — Detective, Legal Clerk, Prosecutor, Defense, Critique, and Judge — extract facts, retrieve legal references, apply transparent symbolic rules, challenge weak claims, and produce an auditable preliminary compliance report. The system is designed as a first-pass decision-support tool, not legal advice: every verdict is grounded in evidence, rule traces, assumptions, missing information, and governance next steps.
 
-Wenji Bai & Hong Qin
+**Author:** Wenji Bai & Hong Qin 
+
+Track 3 submission for the Norrin Hackathon.
+
 
 ---
 
