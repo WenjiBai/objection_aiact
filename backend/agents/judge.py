@@ -35,6 +35,9 @@ class JudgeAgent(BaseAgent):
     output_schema = _JudgeFullOutput
     prompt_filename = "judge.txt"
     action_summary = "Issuing preliminary verdict"
+    # Judge emits verdict + missing-evidence + governance checklist + assumptions
+    # + one resolution per objection — the largest payload in the pipeline.
+    max_tokens = 16000
 
     def build_prompt(self, case: CaseFile) -> tuple[str, str]:
         system_prompt = self.load_prompt()

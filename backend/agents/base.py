@@ -18,7 +18,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from backend.exceptions import BackendValidationError
-from backend.llm.client import call_agent
+from backend.llm.client import DEFAULT_MAX_TOKENS, call_agent
 from shared.schema import (
     AgentActivity, AgentName, AgentStatus, CaseFile,
 )
@@ -34,13 +34,17 @@ class BaseAgent(ABC):
     output_schema: type[BaseModel]
     prompt_filename: str          # e.g. "detective.txt"
     action_summary: str           # one-liner for AgentActivity.action
+    max_tokens: int = DEFAULT_MAX_TOKENS
 
     def run(self, case: CaseFile) -> CaseFile:
         """Execute this agent and append exactly one AgentActivity entry."""
         started_at = datetime.now()
         try:
             system_prompt, user_prompt = self.build_prompt(case)
-            output = call_agent(system_prompt, user_prompt, self.output_schema)
+            output = call_agent(
+                system_prompt, user_prompt, self.output_schema,
+                max_tokens=self.max_tokens,
+            )
             self.merge(case, output)
         except BackendValidationError:
             case.agent_activity.append(

@@ -29,7 +29,7 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 load_dotenv(_PROJECT_ROOT / ".env", override=False)
 
 DEFAULT_MODEL = os.getenv("LLM_MODEL", "claude-sonnet-4-5")
-DEFAULT_MAX_TOKENS = 4000
+DEFAULT_MAX_TOKENS = 8000
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -96,21 +96,36 @@ def call_agent(
         )
         last_raw = response.content[0].text
         cleaned = _strip_code_fence(last_raw)
+        # Detect truncation up front — a max_tokens stop cuts JSON mid-token and
+        # surfaces as a misleading "Invalid JSON: EOF" downstream.
+        truncated = getattr(response, "stop_reason", None) == "max_tokens"
         try:
+            if truncated:
+                raise ValidationError.from_exception_data(
+                    response_schema.__name__,
+                    [{"type": "value_error", "loc": (), "input": cleaned,
+                      "ctx": {"error": f"response truncated at max_tokens={max_tokens}"}}],
+                )
             return response_schema.model_validate_json(cleaned)
         except ValidationError as e:
             if attempt == 0:
+                hint = (
+                    "Your previous response was truncated by the max_tokens limit. "
+                    "Keep field values terse — short reasoning, shorter caveats — "
+                    "and emit a complete JSON object."
+                    if truncated else
+                    f"Your previous response failed JSON schema validation with these errors:\n{e.errors()}"
+                )
                 current_user_prompt = (
-                    f"{user_prompt}\n\n"
-                    f"Your previous response failed JSON schema validation with these errors:\n"
-                    f"{e.errors()}\n\n"
+                    f"{user_prompt}\n\n{hint}\n\n"
                     "Retry with strictly valid JSON that matches the schema exactly. "
                     "Do not wrap the JSON in code fences."
                 )
                 continue
             raise BackendValidationError(
                 agent=response_schema.__name__,
-                errors=e.errors(),
+                errors=e.errors() if not truncated else
+                       f"response truncated at max_tokens={max_tokens}",
                 raw_output=cleaned,
             )
 
