@@ -2414,3 +2414,66 @@ h1, h2, h3, h4, h5,
   background: #ffffff;
   color: #000000;
 }
+
+/* Keep critique objections visually loud in the final pixel skin. */
+[data-theme="light"] .act-obj-card:not(.resolved) {
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 176, 0, 0.22) 0 10px, transparent 10px 20px),
+    #fff0b8;
+  border-color: #000000;
+  border-left: 10px solid #ffb000;
+}
+
+[data-theme="light"] .act-obj-card:not(.resolved) .act-obj-header {
+  color: #7a2e00;
+}
+
+[data-theme="light"] .act-obj-card:not(.resolved) .act-obj-gavel {
+  background: #ffb000;
+  color: #000000;
+  border-color: #000000;
+}
+
+[data-theme="light"] .act-obj-card:not(.resolved) .act-obj-action {
+  background: rgba(255, 176, 0, 0.18);
+  color: #3f2500;
+  margin-left: -6px;
+  margin-right: -6px;
+  padding: 8px 6px 0;
+}
+
+[data-theme="light"] .act-obj-card.resolved {
+  background: #e8f8ef;
+  border-left-color: #16a34a;
+}
+
+[data-theme="dark"] .act-obj-card:not(.resolved) {
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 212, 59, 0.18) 0 10px, transparent 10px 20px),
+    #2b2208;
+  border-color: #ffd43b;
+  border-left: 10px solid #ffd43b;
+}
+
+[data-theme="dark"] .act-obj-card:not(.resolved) .act-obj-header {
+  color: #ffd43b;
+}
+
+[data-theme="dark"] .act-obj-card:not(.resolved) .act-obj-gavel {
+  background: #ffd43b;
+  color: #000000;
+  border-color: #ffd43b;
+}
+
+[data-theme="dark"] .act-obj-card:not(.resolved) .act-obj-action {
+  background: rgba(255, 212, 59, 0.12);
+  color: #ffe8a3;
+  margin-left: -6px;
+  margin-right: -6px;
+  padding: 8px 6px 0;
+}
+
+[data-theme="dark"] .act-obj-card.resolved {
+  background: #082316;
+  border-left-color: #34d399;
+}
