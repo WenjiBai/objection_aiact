@@ -4,7 +4,7 @@ A neuro-symbolic multi-agent courtroom that turns messy AI use-case documents
 into a Preliminary EU AI Act assessment. Internal codename `ActScout Hybrid`.
 Track 3 submission for the Norrin Hackathon, deadline **2026-05-24 11:00**.
 
-> **Preliminary — not legal advice.** Every output is tagged as such.
+Wenji Bai & Hong Qin
 
 ---
 
@@ -166,26 +166,6 @@ correctly (see `backend/prompts/detective.txt`):
 
 ---
 
-## 4. What is real vs. stub
-
-| Layer | Status | Where |
-|---|---|---|
-| `shared/schema.py` (CaseFile contract) | ✅ real | matches `CaseFile_Schema_Spec.md` v2 |
-| `shared/agent_outputs.py` (7 wrappers) | ✅ real | embedded in agent prompts |
-| `shared/mock.py` (Case A + B mocks) | ✅ real | hits §7 acceptance criteria (used by UI when in offline mode) |
-| `backend/api.py` | ✅ real | thin adapter over `Orchestrator` |
-| `backend/orchestrator.py` | ✅ real | 6-agent sequential graph + symbolic gate |
-| `backend/agents/*` (6 agents + chat) | ✅ real | LLM-backed except Legal Clerk (deterministic RAG) |
-| `backend/symbolic/rules.yaml` (13 rules) | ✅ real | loaded by `loader.py`, evaluated by `gate.py` |
-| `backend/symbolic/loader.py` + `gate.py` | ✅ real | yaml_source injected for UI verbatim display |
-| `backend/llm/client.py` | ✅ real | Anthropic Messages + retry once on `ValidationError` |
-| `rag/retrieve.py` | ✅ real | Chroma + ONNX `all-MiniLM-L6-v2`; keyword fallback |
-| `rag/corpus.py` | 🟡 seed | 25 chunks covering the demo; expand with full Act later |
-| `ui/*` | ✅ real | renders everything from CaseFile |
-| PDF export | ❌ not started | nice-to-have (Sync v1 §9.2); markdown → weasyprint |
-
----
-
 ## 5. How to extend
 
 ### 5.1 Change CaseFile shape
@@ -237,30 +217,3 @@ instructions and case-specific examples.
 The schema enforces #1, #3, #5 at parse time (Pydantic validators); the others
 are runtime checks in `shared/validators.py`, `orchestrator.py`, and `app.py`.
 
----
-
-## 7. Known issues / TODO
-
-- **Latency**: end-to-end runs ~3–4 min on Case A (5 sequential LLM calls).
-  Acceptable for hackathon demo but exceeds Sync v1's 30 s soft budget. A
-  cheap win is switching `LLM_MODEL=claude-haiku-4-5` in `.env` (faster, 2–3×).
-- **Spec §7.1 chat test**: hits `+2 confidence` cleanly; `-2 missing` is
-  partially met (Judge often closes 1 missing-evidence item rather than 2,
-  because it correctly distinguishes "override capability" from "written
-  override policy"). User input mentioning "written policy" closes both.
-- `rag/corpus.py` is hand-curated (25 chunks). Append to `SEED_CHUNKS` and
-  re-run `scripts.build_index` to expand the AI Act coverage.
-- No PDF export. Sync v1 §9.2 lists it as Should-Have; markdown → weasyprint
-  is the simplest path.
-
----
-
-## 8. Reference docs
-
-- `../documents/ActScout_Hybrid_Concept_v2.md` — concept, agent design, demo plan
-- `../documents/Frontend_Backend_Sync_v1.md` — the contract
-- `../documents/Backend_Architecture_v1.md` — backend architecture spec
-
----
-
-*Preliminary — not legal advice. Built to be honest.*
