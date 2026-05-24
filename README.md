@@ -1,7 +1,5 @@
 # OBJECTION! AI ACT — developer guide
 
-A neuro-symbolic multi-agent courtroom that turns messy AI use-case documents
-into a Preliminary EU AI Act assessment. Internal codename `ActScout Hybrid`.
 Track 3 submission for the Norrin Hackathon, deadline **2026-05-24 11:00**.
 
 Wenji Bai & Hong Qin
